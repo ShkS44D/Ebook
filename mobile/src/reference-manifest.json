@@ -1,0 +1,762 @@
+[
+  {
+    "file": "Screenshot 2026-09-09 at 1.23.47 PM.png",
+    "size": [
+      314,
+      586
+    ],
+    "reference_states": "Credits / license (reference only)"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.24.36 PM.png",
+    "size": [
+      800,
+      516
+    ],
+    "reference_states": "UI kit cover (reference only)"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.25.47 PM.png",
+    "size": [
+      608,
+      694
+    ],
+    "reference_states": "Splash, onboarding 1"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.25.57 PM.png",
+    "size": [
+      608,
+      694
+    ],
+    "reference_states": "Onboarding 2, onboarding 3"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.26.29 PM.png",
+    "size": [
+      294,
+      648
+    ],
+    "reference_states": "Sign in"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.26.39 PM.png",
+    "size": [
+      294,
+      648
+    ],
+    "reference_states": "Sign in focused keyboard"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.27.00 PM.png",
+    "size": [
+      294,
+      648
+    ],
+    "reference_states": "Forgot password"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.27.13 PM.png",
+    "size": [
+      294,
+      648
+    ],
+    "reference_states": "Sign up focused phone"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.27.24 PM.png",
+    "size": [
+      294,
+      648
+    ],
+    "reference_states": "Verification keyboard"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.27.34 PM.png",
+    "size": [
+      294,
+      724
+    ],
+    "reference_states": "Sign up"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.28.02 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "No friends"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.28.20 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Friends first seen"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.28.28 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Friends feed"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.28.36 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Friend search"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.28.46 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Chat"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.29.02 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Invite friends"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.29.11 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Discover people"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.29.54 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Premium profile"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.30.14 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Nonmember profile"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.30.33 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Friend profile"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.30.51 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Friend action sheet"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.31.16 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Author detail"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.31.28 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Membership"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.31.42 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Book overview"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.31.50 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Book reviews"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.32.03 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Write review keyboard"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.32.16 PM.png",
+    "size": [
+      280,
+      608
+    ],
+    "reference_states": "Book action sheet"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.32.37 PM.png",
+    "size": [
+      586,
+      608
+    ],
+    "reference_states": "Share, save to collection"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.32.45 PM.png",
+    "size": [
+      586,
+      608
+    ],
+    "reference_states": "Completed and tip popups"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.32.59 PM.png",
+    "size": [
+      586,
+      608
+    ],
+    "reference_states": "Reader, text selection"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.33.08 PM.png",
+    "size": [
+      586,
+      608
+    ],
+    "reference_states": "Reader page progress, settings"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.33.18 PM.png",
+    "size": [
+      586,
+      608
+    ],
+    "reference_states": "Dark reader, settings"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.33.27 PM.png",
+    "size": [
+      586,
+      608
+    ],
+    "reference_states": "Sepia reader, progress"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.33.46 PM.png",
+    "size": [
+      316,
+      608
+    ],
+    "reference_states": "Sepia reader settings"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.34.12 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Reading overview, store book"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.34.21 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Book purchase options, download"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.34.32 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Download popup, checkout"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.34.43 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Payment success and failure"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.34.53 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Payment methods, App Store"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.35.18 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Collections, collection detail"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.35.24 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Add purchased books, My Collections"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.35.35 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Collection list, delete row"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.35.44 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "New collection, edit collection"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.35.51 PM.png",
+    "size": [
+      570,
+      608
+    ],
+    "reference_states": "Collection selected rows, delete popup"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.36.04 PM.png",
+    "size": [
+      288,
+      608
+    ],
+    "reference_states": "Empty collections"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.36.20 PM.png",
+    "size": [
+      588,
+      608
+    ],
+    "reference_states": "Notifications, empty notifications"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.36.34 PM.png",
+    "size": [
+      588,
+      608
+    ],
+    "reference_states": "Profile menu, settings"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.36.43 PM.png",
+    "size": [
+      588,
+      608
+    ],
+    "reference_states": "Edit profile, reading goals"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.37.16 PM.png",
+    "size": [
+      588,
+      608
+    ],
+    "reference_states": "Goal picker, goal selected popup"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.38.02 PM.png",
+    "size": [
+      144,
+      1116
+    ],
+    "reference_states": "Home long screen"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.38.19 PM.png",
+    "size": [
+      144,
+      602
+    ],
+    "reference_states": "Library long screen"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.39.25 PM.png",
+    "size": [
+      672,
+      706
+    ],
+    "reference_states": "Store, search categories"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.39.33 PM.png",
+    "size": [
+      672,
+      706
+    ],
+    "reference_states": "Search focused, search results"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.39.44 PM.png",
+    "size": [
+      330,
+      706
+    ],
+    "reference_states": "Horror category"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.40.36 PM.png",
+    "size": [
+      850,
+      928
+    ],
+    "reference_states": "Dark splash, onboarding 1"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.40.44 PM.png",
+    "size": [
+      850,
+      928
+    ],
+    "reference_states": "Dark onboarding 2 and 3"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.40.53 PM.png",
+    "size": [
+      850,
+      928
+    ],
+    "reference_states": "Dark sign in, focused keyboard"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.41.09 PM.png",
+    "size": [
+      850,
+      1014
+    ],
+    "reference_states": "Dark forgot password, sign up"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.41.18 PM.png",
+    "size": [
+      850,
+      1014
+    ],
+    "reference_states": "Dark phone input, verification"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.41.37 PM.png",
+    "size": [
+      890,
+      958
+    ],
+    "reference_states": "Dark no friends, friends first seen"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.41.56 PM.png",
+    "size": [
+      890,
+      958
+    ],
+    "reference_states": "Dark friends feed, search"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.42.16 PM.png",
+    "size": [
+      890,
+      958
+    ],
+    "reference_states": "Dark chat, invite friends"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.42.25 PM.png",
+    "size": [
+      440,
+      958
+    ],
+    "reference_states": "Dark discover people"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.42.39 PM.png",
+    "size": [
+      892,
+      958
+    ],
+    "reference_states": "Dark premium and nonmember profiles"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.42.49 PM.png",
+    "size": [
+      892,
+      958
+    ],
+    "reference_states": "Dark friend profile and action sheet"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.42.57 PM.png",
+    "size": [
+      892,
+      958
+    ],
+    "reference_states": "Dark author and membership"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.43.10 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Dark book overview and reviews"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.43.19 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Dark write review and book action sheet"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.43.27 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Dark share and save collection"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.43.35 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Dark completion and tip popups"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.43.47 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Reader and text selection"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.43.54 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Reader progress and dark settings popover"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.44.01 PM.png",
+    "size": [
+      892,
+      926
+    ],
+    "reference_states": "Dark reader and settings"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.44.13 PM.png",
+    "size": [
+      1356,
+      926
+    ],
+    "reference_states": "Sepia reader, progress, dark settings popover"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.44.26 PM.png",
+    "size": [
+      1356,
+      926
+    ],
+    "reference_states": "Dark reading overview and purchase options"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.44.34 PM.png",
+    "size": [
+      1356,
+      926
+    ],
+    "reference_states": "Dark download, completion, checkout"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.44.42 PM.png",
+    "size": [
+      1356,
+      926
+    ],
+    "reference_states": "Dark payment success, failure, methods"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.44.54 PM.png",
+    "size": [
+      466,
+      926
+    ],
+    "reference_states": "App Store checkout preview"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.45.13 PM.png",
+    "size": [
+      922,
+      926
+    ],
+    "reference_states": "Dark collections and detail"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.45.19 PM.png",
+    "size": [
+      922,
+      926
+    ],
+    "reference_states": "Dark add books and My Collections"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.45.27 PM.png",
+    "size": [
+      922,
+      926
+    ],
+    "reference_states": "Dark collection list and remove row"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.45.36 PM.png",
+    "size": [
+      922,
+      926
+    ],
+    "reference_states": "Dark new collection and edit"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.45.44 PM.png",
+    "size": [
+      922,
+      926
+    ],
+    "reference_states": "Dark selection and delete popup"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.45.55 PM.png",
+    "size": [
+      474,
+      926
+    ],
+    "reference_states": "Dark empty collections"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.46.07 PM.png",
+    "size": [
+      904,
+      926
+    ],
+    "reference_states": "Dark notifications and empty state"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.46.14 PM.png",
+    "size": [
+      904,
+      926
+    ],
+    "reference_states": "Dark profile menu and settings"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.46.22 PM.png",
+    "size": [
+      904,
+      926
+    ],
+    "reference_states": "Dark edit profile and reading goals"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.46.29 PM.png",
+    "size": [
+      904,
+      926
+    ],
+    "reference_states": "Dark goal picker and completion"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.46.53 PM.png",
+    "size": [
+      186,
+      1280
+    ],
+    "reference_states": "Dark Home long screen"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.47.20 PM.png",
+    "size": [
+      158,
+      692
+    ],
+    "reference_states": "Dark Library long screen"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.47.44 PM.png",
+    "size": [
+      530,
+      1064
+    ],
+    "reference_states": "Dark Store"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.47.53 PM.png",
+    "size": [
+      530,
+      1064
+    ],
+    "reference_states": "Dark Search categories"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.47.58 PM.png",
+    "size": [
+      530,
+      1064
+    ],
+    "reference_states": "Dark Search keyboard"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.48.06 PM.png",
+    "size": [
+      530,
+      1064
+    ],
+    "reference_states": "Dark Search results"
+  },
+  {
+    "file": "Screenshot 2026-09-09 at 1.48.11 PM.png",
+    "size": [
+      530,
+      1064
+    ],
+    "reference_states": "Dark Horror category"
+  }
+]

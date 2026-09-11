@@ -1,0 +1,46 @@
+[
+  {
+    "id": "11bb6f90-a4a3-4a8c-9200-000000000001",
+    "page": 0,
+    "title": "Make a quiet moment for reading",
+    "caption": "A calm reading spot makes the small daily promise on this page easier to keep. Watch the slow page turns, then try five attentive minutes yourself.",
+    "tags": ["reading", "habit", "quiet", "focus"],
+    "videoUrl": "https://videos.pexels.com/video-files/6771541/6771541-hd_1920_1080_30fps.mp4",
+    "sourceUrl": "https://www.pexels.com/video/a-person-reading-a-book-6771541/",
+    "attribution": "Max Vakhtbovych / Pexels",
+    "duration": 13.566667
+  },
+  {
+    "id": "11bb6f90-a4a3-4a8c-9200-000000000002",
+    "page": 1,
+    "title": "Put an idea into your own words",
+    "caption": "This page suggests pausing to reflect on one idea. A reader taking notes shows how to turn a question into a short written response, rather than rushing through the text.",
+    "tags": ["reading", "question", "notes", "reflection", "learning"],
+    "videoUrl": "https://videos.pexels.com/video-files/6549538/6549538-hd_1080_1920_25fps.mp4",
+    "sourceUrl": "https://www.pexels.com/video/woman-taking-notes-from-a-book-6549538/",
+    "attribution": "Tima Miroshnichenko / Pexels",
+    "duration": 24.895
+  },
+  {
+    "id": "11bb6f90-a4a3-4a8c-9200-000000000003",
+    "page": 2,
+    "title": "Make room on your reading shelf",
+    "caption": "Explore the variety of books on these library shelves. Like the collections on this page, a shelf can hold familiar favorites alongside something you have never tried.",
+    "tags": ["books", "library", "collection", "genre", "curiosity"],
+    "videoUrl": "https://videos.pexels.com/video-files/1580502/1580502-uhd_3840_2160_30fps.mp4",
+    "sourceUrl": "https://www.pexels.com/video/books-in-the-library-1580502/",
+    "attribution": "Adailton Batista / Pexels",
+    "duration": 36.101667
+  },
+  {
+    "id": "11bb6f90-a4a3-4a8c-9200-000000000004",
+    "page": 3,
+    "title": "Let a book start a conversation",
+    "caption": "The final page invites you to carry an idea into everyday life. This group reading together illustrates sharing a response with friends and listening to another perspective.",
+    "tags": ["reading", "friends", "conversation", "sharing", "discussion"],
+    "videoUrl": "https://videos.pexels.com/video-files/8199375/8199375-hd_1920_1080_25fps.mp4",
+    "sourceUrl": "https://www.pexels.com/video/people-reading-books-8199375/",
+    "attribution": "Yan Krukau / Pexels",
+    "duration": 28.8
+  }
+]

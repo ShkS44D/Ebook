@@ -1,0 +1,11 @@
+{
+  "name": "ibook-ui-project",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix mobile start",
+    "web": "npm --prefix mobile run web",
+    "ios": "npm --prefix mobile run ios",
+    "android": "npm --prefix mobile run android",
+    "typecheck": "npm --prefix mobile run typecheck"
+  }
+}
