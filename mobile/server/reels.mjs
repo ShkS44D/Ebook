@@ -6,7 +6,9 @@ import {
   createHmac,
   timingSafeEqual,
 } from "node:crypto";
-import { mkdir, open, unlink } from "node:fs/promises";
+import { mkdir, open, unlink, writeFile, readFile } from "node:fs/promises";
+import { head, put, del } from '@vercel/blob';
+import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client';
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -16,10 +18,15 @@ import { z } from "zod";
 import { query, transaction } from "./db.mjs";
 import { rankReels } from "./reel-ranking.mjs";
 const runFile = promisify(execFile);
-const mediaRoot = path.resolve(process.env.MEDIA_DIR || "media");
+const mediaRoot = path.resolve(process.env.MEDIA_DIR || (process.env.VERCEL ? '/tmp/ibook-media' : 'media'));
 await mkdir(mediaRoot, { recursive: true });
 const uuid = z.string().uuid();
-const reviewSecret = randomBytes(32);
+const reviewSecret = process.env.REEL_REVIEW_SECRET || randomBytes(32);
+const cloudStorage = !!process.env.BLOB_READ_WRITE_TOKEN;
+async function removeMedia(filename) {
+  if (filename.startsWith('https://')) await del(filename);
+  else await unlink(path.join(mediaRoot, filename)).catch(() => {});
+}
 const signReview = (id, expires) =>
   createHmac("sha256", reviewSecret)
     .update(id + ":" + expires)
@@ -96,6 +103,7 @@ export function registerPublicReels(app) {
     if (!m) fail(404, "Video unavailable.");
     res.set("Cross-Origin-Resource-Policy", "cross-origin");
     res.type(m.mime);
+    if (m.filename.startsWith('https://')) return res.redirect(307, m.filename);
     res.sendFile(m.filename, { root: mediaRoot, dotfiles: "deny" }, (error) => {
       if (error && !res.headersSent)
         res.status(404).json({ error: "Video file unavailable." });
@@ -112,6 +120,7 @@ export function registerPublicReels(app) {
     if (!m) fail(404, "Video unavailable.");
     res.set("Cross-Origin-Resource-Policy", "cross-origin");
     res.type(m.mime);
+    if (m.filename.startsWith('https://')) return res.redirect(307, m.filename);
     res.sendFile(m.filename, { root: mediaRoot, dotfiles: "deny" }, (error) => {
       if (error && !res.headersSent)
         res.status(404).json({ error: "Video file unavailable." });
@@ -201,6 +210,34 @@ const upload = multer({
       ["video/mp4", "video/webm", "video/quicktime"].includes(file.mimetype),
     ),
 });
+reelsRouter.get('/reel-upload-config', (_req, res) => res.json({ direct: cloudStorage }));
+reelsRouter.post('/reel-upload-token', publishLimit, async (req, res) => {
+  if (!cloudStorage) fail(503, 'Cloud uploads are not configured.');
+  const expired = await query('DELETE FROM ibook.reel_upload_intents WHERE owner_id=$1 AND expires_at<now() RETURNING pathname', [req.user.id]);
+  await Promise.all(expired.map(intent => del(intent.pathname).catch(() => {})));
+  const [{ count }] = await query('SELECT ((SELECT count(*) FROM ibook.reel_media WHERE owner_id=$1) + (SELECT count(*) FROM ibook.reel_upload_intents WHERE owner_id=$1 AND expires_at>now()))::int count', [req.user.id]);
+  if (count >= 50) fail(400, 'Your upload quota has been reached. Remove a video or try later.');
+  const id = randomUUID(), pathname = `reels/${req.user.id}/${id}.video`;
+  await query("INSERT INTO ibook.reel_upload_intents(id,owner_id,pathname,expires_at) VALUES($1,$2,$3,now()+interval '20 minutes')", [id, req.user.id, pathname]);
+  const token = await generateClientTokenFromReadWriteToken({ pathname, allowedContentTypes: ['video/mp4', 'video/webm', 'video/quicktime'], maximumSizeInBytes: 50 * 1024 * 1024, validUntil: Date.now() + 15 * 60 * 1000, addRandomSuffix: false, allowOverwrite: false });
+  res.json({ id, pathname, token });
+});
+reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res, next) => {
+  const id = uuid.parse(req.body.id);
+  const [intent] = await query('SELECT * FROM ibook.reel_upload_intents WHERE id=$1 AND owner_id=$2 AND expires_at>now()', [id, req.user.id]);
+  if (!intent) fail(404, 'Upload expired. Please choose your video again.');
+  const blob = await head(intent.pathname);
+  const [existing] = await query('SELECT id,duration_seconds FROM ibook.reel_media WHERE filename=$1 AND owner_id=$2', [blob.url, req.user.id]);
+  if (existing) return res.status(201).json({ id: existing.id, durationSeconds: existing.duration_seconds });
+  if (blob.size > 50 * 1024 * 1024) fail(400, 'Video must be smaller than 50 MB.');
+  const response = await fetch(blob.url, { signal: AbortSignal.timeout(20000) });
+  if (!response.ok) fail(400, 'Upload could not be retrieved. Try again.');
+  const filename = randomUUID() + '.video', filepath = path.join(mediaRoot, filename);
+  await writeFile(filepath, Buffer.from(await response.arrayBuffer()));
+  req.file = { path: filepath, filename, size: blob.size, cloudUrl: blob.url };
+  await completeUpload(req, res, next);
+  await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
+});
 reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
   const [{ count }] = await query(
     "SELECT count(*)::int count FROM ibook.reel_media WHERE owner_id=$1",
@@ -211,7 +248,9 @@ reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
       400,
       "Your 50-video upload limit has been reached. Delete a reel before uploading another.",
     );
-  upload.single("video")(req, res, async (error) => {
+  upload.single("video")(req, res, error => { void completeUpload(req, res, next, error); });
+});
+async function completeUpload(req, res, next, error) {
     if (error)
       return next(
         Object.assign(
@@ -279,13 +318,21 @@ reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
         ? "video/webm"
         : "video/mp4";
       const id = randomUUID();
+      let filename = req.file.cloudUrl || req.file.filename;
+      if (cloudStorage && !req.file.cloudUrl) {
+        const blob = await put(`reels/${req.user.id}/${id}.video`, await readFile(req.file.path), { access: 'public', contentType: mime, addRandomSuffix: false });
+        filename = blob.url;
+        req.file.cloudUrl = blob.url;
+      }
       await query(
         "INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds) VALUES($1,$2,$3,$4,$5,$6)",
-        [id, req.user.id, req.file.filename, mime, req.file.size, duration],
+        [id, req.user.id, filename, mime, req.file.size, duration],
       );
+      if (cloudStorage) await unlink(req.file.path).catch(() => {});
       res.status(201).json({ id, durationSeconds: duration });
     } catch (error) {
       await unlink(req.file.path).catch(() => {});
+      if (req.file.cloudUrl) await del(req.file.cloudUrl).catch(() => {});
       next(
         Object.assign(
           new Error(
@@ -297,15 +344,15 @@ reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
         ),
       );
     }
-  });
-});
+
+}
 reelsRouter.delete("/reel-upload/:id", async (req, res) => {
   const [m] = await query(
     "DELETE FROM ibook.reel_media WHERE id=$1 AND owner_id=$2 AND NOT EXISTS(SELECT 1 FROM ibook.reels WHERE media_id=$1) RETURNING filename",
     [uuid.parse(req.params.id), req.user.id],
   );
   if (!m) fail(404, "Unpublished upload not found.");
-  await unlink(path.join(mediaRoot, m.filename)).catch(() => {});
+  await removeMedia(m.filename);
   res.json({ ok: true });
 });
 reelsRouter.post("/reels", publishLimit, async (req, res) => {
@@ -377,7 +424,7 @@ reelsRouter.delete("/reels/:id", async (req, res) => {
       return m?.filename;
     }
   });
-  if (removed) await unlink(path.join(mediaRoot, removed)).catch(() => {});
+  if (removed) await removeMedia(removed);
   res.json({ ok: true });
 });
 reelsRouter.put("/reels/:id/reaction", async (req, res) => {

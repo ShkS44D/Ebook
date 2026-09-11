@@ -20,6 +20,7 @@ import { readerSettingsSchema, libraryUpdateSchema, validPosition } from "./read
 const scrypt = promisify(scryptCallback);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const app = express();
+if (process.env.VERCEL) app.set('trust proxy', 1);
 const production = process.env.NODE_ENV === "production";
 const origins = (
   process.env.ALLOWED_ORIGINS ||
@@ -27,6 +28,9 @@ const origins = (
 )
   .split(",")
   .map((x) => x.trim());
+for (const host of [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
+  if (host) origins.push('https://' + host);
+}
 app.disable("x-powered-by");
 app.use(
   helmet(),
@@ -612,6 +616,8 @@ app.use((error, req, res, next) => {
       : "The service could not complete this request. Please try again.",
   });
 });
+export default app;
+if (!process.env.VERCEL) {
 await migrate();
 const server = app.listen(Number(process.env.API_PORT || 3001), "0.0.0.0", () =>
   console.log(`iBook API ready on port ${process.env.API_PORT || 3001}`),
@@ -622,3 +628,4 @@ process.on("SIGTERM", () =>
     process.exit(0);
   }),
 );
+}

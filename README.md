@@ -1,6 +1,10 @@
 # iBook mobile UI
 
-React Native / Expo prototype for iOS and Android, based on the 95 supplied screenshots in `ui/`. All content is bundled locally. Forms, selection controls and navigation are interactive previews; there are no backend, authentication, payment or messaging services.
+React Native / Expo reading app for web, iOS and Android, based on the supplied screenshots in `ui/`. It includes an Express API backed by Neon, account authentication, saved reading progress, customizable reading themes, book search, bookmarks, collections, reviews, messaging and page-linked video reels. Payments and licensed catalog text are not configured; the original reading guide is available to read.
+
+Live site: https://ebook-sigma-five.vercel.app
+
+See [mobile/README.md](mobile/README.md) for backend setup, reader controls, Vercel deployment and video storage details. The Vercel project uses `mobile` as its root directory and Vercel Blob for uploaded videos. GitHub automatic deployments require connecting your GitHub login in Vercel; direct CLI deployment is configured.
 
 ## Run
 

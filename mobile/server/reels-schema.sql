@@ -4,6 +4,10 @@ CREATE TABLE IF NOT EXISTS ibook.reel_media (
  duration_seconds real NOT NULL CHECK(duration_seconds BETWEEN 1 AND 90),
  created_at timestamptz NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS ibook.reel_upload_intents (
+ id uuid PRIMARY KEY, owner_id uuid NOT NULL REFERENCES ibook.users ON DELETE CASCADE,
+ pathname text UNIQUE NOT NULL, expires_at timestamptz NOT NULL
+);
 CREATE TABLE IF NOT EXISTS ibook.reels (
  id uuid PRIMARY KEY, creator_id uuid REFERENCES ibook.users ON DELETE CASCADE,
  book_id text NOT NULL REFERENCES ibook.books, page integer NOT NULL CHECK(page>=0),

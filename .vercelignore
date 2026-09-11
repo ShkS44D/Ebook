@@ -1,0 +1,7 @@
+ui
+.DS_Store
+mobile/.env*
+mobile/node_modules
+mobile/media
+mobile/dist
+mobile/verification

@@ -52,7 +52,8 @@ const empty: State = {
 };
 let nativeToken: string | null = null;
 export const apiBase =
-  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === "web" && typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
 export async function api(
   path: string,
   method = "GET",

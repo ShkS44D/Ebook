@@ -11,6 +11,7 @@ import {
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import * as DocumentPicker from "expo-document-picker";
+import { File } from 'expo-file-system';
 import { LinearGradient } from "expo-linear-gradient";
 import { api, apiBase, useStore } from "./store";
 import {
@@ -799,7 +800,16 @@ export function AddReel({ navigation, route }: any) {
         name: file.name,
         type: file.mimeType || "video/mp4",
       } as any);
-    const data = await api("/reel-upload", "POST", form);
+    const config = await api('/reel-upload-config');
+    let data;
+    if (config.direct) {
+      const signed = await api('/reel-upload-token', 'POST', {});
+      const { put } = await import('@vercel/blob/client');
+      await put(signed.pathname, Platform.OS === 'web' && file.file ? file.file : new File(file.uri), {
+        access: 'public', token: signed.token, contentType: file.mimeType || 'video/mp4', multipart: true,
+      });
+      data = await api('/reel-upload-complete', 'POST', { id: signed.id });
+    } else data = await api("/reel-upload", "POST", form);
     if (!mounted.current) {
       await api("/reel-upload/" + data.id, "DELETE");
       return;

@@ -107,7 +107,13 @@ Readers can upload MP4/WebM videos of 1–90 seconds and up to 50 MB, or share H
 
 Uploaded videos play inside iBook. External links open on their original platforms; iBook does not download Instagram content, scrape accounts, or claim to measure external watch completion. Public share links use `/reels/:reelId` and preserve the linked reading page. Web also supports copying the link. Set `EXPO_PUBLIC_WEB_URL` for native HTTPS share links; otherwise native shares use `ibook://`, which requires the installed app. A localhost link is only useful on the development computer. A deployed web host must fall back to `index.html` for these routes.
 
-Video files live on the API server's persistent disk, while Neon stores their metadata, relationships and engagement. Back up **both** Neon and `MEDIA_DIR`. The API needs permission to execute the bundled ffprobe binary. This disk-backed implementation targets a single persistent API instance: ephemeral/serverless hosts or multiple replicas require shared object storage/CDN and a media processing pipeline before deployment. Original uploads are served with byte-range support; adaptive bitrate/transcoding and automatic content moderation are not implemented.
+Locally, video files live in `MEDIA_DIR`. On Vercel, `BLOB_READ_WRITE_TOKEN` enables direct client uploads to Vercel Blob; Neon stores metadata, ownership and engagement. Upload tokens are short-lived and restricted to one generated path, supported content types and 50 MB. The completion endpoint checks ownership, downloads the object to temporary storage and validates its actual format, codec and duration with ffprobe before creating a reel-media record. Playback redirects to Blob for range support. Unfinished upload intents expire; the next upload from that account cleans up expired objects. Blob URLs are public, so a previously shared URL remains accessible until its object is deleted. Adaptive bitrate/transcoding and automatic content moderation are not implemented.
+
+### Vercel deployment
+
+The Vercel project uses `mobile` as its root, exports the Expo web app into `dist`, and serves Express through `api/index.mjs`. `vercel.json` routes API requests separately from app deep links. The build runs the idempotent database migration. In production, web API calls use the same origin; set `EXPO_PUBLIC_API_URL` only for a separately hosted API or native build.
+
+Set server-only `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, and `REEL_REVIEW_SECRET` in Vercel. Add custom domains to `ALLOWED_ORIGINS`; Vercel's deployment and production hosts are included automatically. Keep `.env*` and `.vercel` files out of Git and deployment uploads. From the linked repository root run `vercel deploy --prod`. GitHub auto-deploy requires connecting the GitHub account in Vercel, then linking `ShkS44D/Ebook` with root directory `mobile`.
 
 ### Starter-video provenance
 
