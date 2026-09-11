@@ -1,3 +1,4 @@
+import { ReadingGoalIcon } from './reading-goal-icon';
 import React, { useState } from "react";
 import { Image, View } from "react-native";
 import { art } from "./assets";
@@ -151,6 +152,7 @@ export function Home({ navigation }: any) {
       </Section>
       <Section title="Your reading goal" light={!t.dark}>
         <Card>
+          <ReadingGoalIcon progress={(today?.seconds || 0) / ((user?.goal || 20) * 60)} />
           <Txt bold size={24}>
             {Math.floor((today?.seconds || 0) / 60)} / {user?.goal || 20}{" "}
             minutes

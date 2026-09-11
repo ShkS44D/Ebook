@@ -1,3 +1,4 @@
+import { ReaderToolbar } from './reader-toolbar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View, useColorScheme, useWindowDimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -205,7 +206,7 @@ function ReaderSession({ id, navigation, route }: any) {
     fontWeight: settings.bold ? '700' as const : '400' as const, letterSpacing: settings.customize ? settings.characterSpacing : 0,
     textAlign: settings.customize && settings.justify ? 'justify' as const : 'left' as const,
     ...(Platform.OS === 'web' ? { wordSpacing: settings.customize ? settings.wordSpacing : 0 } as any : {}) };
-  const menuItem = (label: string, icon: any, onPress: () => void, primary = false) => <Pressable key={label} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={[s.menuItem, { backgroundColor: primary ? '#281C0D' : '#F0EBDDFA' }]}><Text style={{ color: primary ? '#FFF6E5' : '#29251E', fontSize: 17 }}>{label}</Text><Ionicons name={icon} size={24} color={primary ? '#FFF6E5' : '#29251E'} /></Pressable>;
+
 
   return <View style={[s.root, { backgroundColor: bg, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
     <StatusBar hidden={!menu && !panel} style={dark || settings.theme === 'quiet' ? 'light' : 'dark'} />
@@ -248,23 +249,23 @@ function ReaderSession({ id, navigation, route }: any) {
       <Pressable accessibilityRole="button" accessibilityLabel="Open reader menu" onPress={() => setMenu(value => !value)} style={{ padding: 14 }}><Text style={{ color: ink, opacity: 0.6, fontSize: 15 }}>{page ? `${index + 1}${menu ? ` of ${pages.length}` : ''}` : '—'}</Text></Pressable>
       <RoundButton name={index === pages.length - 1 ? 'checkmark' : 'chevron-forward'} label={index === pages.length - 1 ? 'Finish book' : 'Next page'} color={ink} disabled={!page || action.busy} onPress={() => step(1)} />
     </View>
-    {menu && page && <View style={[s.menu, { bottom: insets.bottom + 76 }]}>
-      {!!notice && <Text accessibilityLiveRegion="polite" style={s.notice}>{notice}</Text>}
-      {menuItem(`Contents · ${percent}%`, 'list', () => { setContentsTab('chapters'); setPanel('contents'); }, true)}
-      {menuItem('Search Book', 'search', () => setPanel('search'))}
-      {menuItem('Themes & Settings', 'text', () => setPanel('themes'))}
-      {menuItem('Page reels', 'play-outline', () => setPanel('reels'))}
-      <View style={s.actions}>
-        <RoundButton name="share-outline" label="Share book" onPress={() => action.run(share)} />
-        <RoundButton name={locked ? 'lock-closed' : 'lock-open-outline'} label={locked ? 'Unlock orientation' : 'Lock orientation'} selected={locked} onPress={() => action.run(toggleLock)} />
-        <RoundButton name="reorder-three-outline" label={settings.scroll ? 'Switch to pages' : 'Switch to scrolling'} selected={settings.scroll} onPress={() => action.run(async () => {
+    {page && <ReaderToolbar visible={menu && !panel} dark={dark || settings.theme === 'quiet'} bottom={insets.bottom + 76} notice={notice}
+      primary={[
+        { label: `Contents · ${percent}%`, title: `Contents · ${percent}%`, icon: 'list-outline', selected: true, onPress: () => { setContentsTab('chapters'); setPanel('contents'); } },
+        { label: 'Search Book', title: 'Search', icon: 'search-outline', onPress: () => setPanel('search') },
+        { label: 'Themes & Settings', title: 'Appearance', icon: 'text-outline', onPress: () => setPanel('themes') },
+        { label: 'Page reels', title: 'Page reels', icon: 'play-circle-outline', onPress: () => setPanel('reels') },
+      ]}
+      actions={[
+        { label: 'Share book', icon: 'share-outline', onPress: () => action.run(share) },
+        { label: locked ? 'Unlock orientation' : 'Lock orientation', icon: locked ? 'lock-closed' : 'lock-open-outline', selected: locked, onPress: () => action.run(toggleLock) },
+        { label: settings.scroll ? 'Switch to pages' : 'Switch to scrolling', icon: 'reorder-three-outline', selected: settings.scroll, onPress: () => action.run(async () => {
           const next = { ...settings, scroll: !settings.scroll };
           await store.mutate('/me', 'PATCH', { reader_settings: next });
           scrollTarget.current = index; setSettings(next); setMenu(false);
-        })} />
-        <RoundButton name={pageBookmarked ? 'bookmark' : 'bookmark-outline'} label={pageBookmarked ? 'Remove page bookmark' : 'Bookmark page'} selected={pageBookmarked} onPress={() => action.run(bookmark)} />
-      </View>
-    </View>}
+        }) },
+        { label: pageBookmarked ? 'Remove page bookmark' : 'Bookmark page', icon: pageBookmarked ? 'bookmark' : 'bookmark-outline', selected: pageBookmarked, onPress: () => action.run(bookmark) },
+      ]} />}
     <ReaderSheet visible={panel === 'contents'} title="Contents" onClose={() => setPanel(null)}>
       <View style={s.bookHeader}>{cover && <Image source={cover.image} style={s.cover} />}<View style={{ flex: 1 }}><Text style={s.bookTitle}>{book?.title}</Text><Text style={s.subtle}>Page {index + 1} of {pages.length}</Text></View></View>
       <View style={s.tabs}>{(['chapters', 'bookmarks'] as const).map(tab => <Pressable key={tab} accessibilityRole="tab" accessibilityState={{ selected: contentsTab === tab }} onPress={() => setContentsTab(tab)} style={[s.tab, contentsTab === tab && { backgroundColor: '#E2E0DA' }]}><Text style={s.tabText}>{tab === 'chapters' ? 'Chapters' : `Bookmarks (${bookmarks.length})`}</Text></Pressable>)}</View>
@@ -295,9 +296,6 @@ const s = StyleSheet.create({
   root: { flex: 1, width: '100%', maxWidth: 800, alignSelf: 'center' },
   top: { minHeight: 70, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 22, gap: 8 },
   footer: { height: 70, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 26 },
-  menu: { position: 'absolute', right: 18, width: '80%', maxWidth: 350, gap: 6, borderRadius: 25, boxShadow: '0 18px 55px #30271933' },
-  menuItem: { minHeight: 50, borderRadius: 28, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  actions: { flexDirection: 'row', justifyContent: 'space-between', padding: 4, borderRadius: 28, backgroundColor: '#EEE7D8F2' },
   notice: { backgroundColor: '#FFF9EB', borderRadius: 14, padding: 12, color: '#605039', fontSize: 13, lineHeight: 19 },
   bookHeader: { flexDirection: 'row', gap: 16, alignItems: 'center', paddingHorizontal: 22, paddingBottom: 20 },
   cover: { width: 52, height: 76, borderRadius: 6 },

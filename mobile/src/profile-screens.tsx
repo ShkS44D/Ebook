@@ -1,3 +1,4 @@
+import { ReadingGoalIcon } from './reading-goal-icon';
 import React, { useCallback, useState } from "react";
 import { Switch, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
@@ -338,6 +339,7 @@ export function GoalsScreen({ navigation }: any) {
         <Header navigation={navigation} title="Reading goals" />
         <Feedback {...action} />
         <Card>
+          <ReadingGoalIcon progress={seconds / ((store.user?.goal || 20) * 60)} />
           <Txt size={48} bold>
             {Math.floor(seconds / 60)} min
           </Txt>

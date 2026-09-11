@@ -549,28 +549,29 @@ export function FloatArt({ name, size = 200 }: any) {
     </Animated.View>
   );
 }
-export function Glass({ children, style }: any) {
+export function Glass({ children, style, dark }: any) {
   const t = useTheme();
+  const isDark = dark ?? t.dark;
   if (
     Platform.OS === "ios" &&
     isLiquidGlassAvailable() &&
     isGlassEffectAPIAvailable()
   )
     return (
-      <GlassView glassEffectStyle="regular" style={style}>
+      <GlassView glassEffectStyle="regular" colorScheme={isDark ? "dark" : "light"} style={style}>
         {children}
       </GlassView>
     );
   return (
     <BlurView
       intensity={65}
-      tint={t.dark ? "dark" : "light"}
+      tint={isDark ? "dark" : "light"}
       style={[
         {
-          backgroundColor: t.dark ? "#282828E8" : "#FFFFFFE8",
+          backgroundColor: isDark ? "#282828E8" : "#FFFFFFE8",
           overflow: "hidden",
           borderWidth: 1,
-          borderColor: t.dark ? "#FFFFFF20" : "#FFFFFFBB",
+          borderColor: isDark ? "#FFFFFF20" : "#FFFFFFBB",
         },
         style,
       ]}
