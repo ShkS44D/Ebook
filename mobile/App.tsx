@@ -1,3 +1,4 @@
+import { LiquidTabBar } from './src/liquid-tab-bar';
 import { StoreProvider, useStore } from "./src/store";
 import {
   AddReel,
@@ -13,7 +14,6 @@ import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   SafeAreaProvider,
-  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import {
   NavigationContainer,
@@ -27,17 +27,10 @@ import { useFonts } from "expo-font";
 const Poppins_400Regular = require("@expo-google-fonts/poppins/400Regular/Poppins_400Regular.ttf");
 const Poppins_600SemiBold = require("@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.ttf");
 import {
-  Glass,
   Button,
-  Header,
-  Icon,
   Page,
-  Row,
-  Section,
-  Tap,
   ThemeContext,
   Txt,
-  useTheme,
 } from "./src/ui";
 import { purple } from "./src/data";
 import { Home, Library, Store, Search, Category } from "./src/main-screens";
@@ -93,88 +86,10 @@ import {
 } from "./src/profile-screens";
 const Stack = createNativeStackNavigator<any>();
 const Tabs = createBottomTabNavigator<any>();
-function TabBar({ state, navigation }: any) {
-  const t = useTheme();
-  const insets = useSafeAreaInsets();
-  return (
-    <View
-      style={{
-        position: "absolute",
-        left: 28,
-        right: 28,
-        bottom: Math.max(insets.bottom, 16),
-        alignItems: "center",
-      }}
-    >
-      <Glass
-        style={{
-          flexDirection: "row",
-          borderRadius: 40,
-          padding: 7,
-          width: "100%",
-          maxWidth: 560,
-          shadowColor: "#4A378A",
-          shadowOpacity: 0.14,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 7 },
-          elevation: 10,
-        }}
-      >
-        {state.routes.map((r: any, i: number) => (
-          <View key={r.key} style={{ flex: 1 }}>
-            <Tap
-              label={r.name + " tab"}
-              onPress={() => {
-                const e = navigation.emit({
-                  type: "tabPress",
-                  target: r.key,
-                  canPreventDefault: true,
-                });
-                if (!e.defaultPrevented) navigation.navigate(r.name);
-              }}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                height: 54,
-                borderRadius: 30,
-                backgroundColor:
-                  state.index === i ? "#6952FF19" : "transparent",
-              }}
-            >
-              <Icon
-                name={
-                  [
-                    "home-outline",
-                    "book-outline",
-                    "bag-outline",
-                    "search-outline",
-                  ][i]
-                }
-                color={state.index === i ? purple : t.muted}
-                size={24}
-              />
-              {state.index === i && (
-                <View
-                  style={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: 2,
-                    backgroundColor: purple,
-                    marginTop: 4,
-                  }}
-                />
-              )}
-            </Tap>
-          </View>
-        ))}
-      </Glass>
-    </View>
-  );
-}
 function Main() {
   return (
     <Tabs.Navigator
-      tabBar={(p) => <TabBar {...p} />}
+      tabBar={(p) => <LiquidTabBar {...p} />}
       screenOptions={{ headerShown: false, animation: "fade" }}
     >
       <Tabs.Screen name="Home" component={Home} />
