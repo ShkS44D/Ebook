@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS ibook.library (
  page integer NOT NULL DEFAULT 0 CHECK(page >= 0), finished boolean NOT NULL DEFAULT false,
  bookmarked boolean NOT NULL DEFAULT false, updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(user_id,book_id)
 );
+ALTER TABLE ibook.library ADD COLUMN IF NOT EXISTS reader_offset integer NOT NULL DEFAULT 0 CHECK(reader_offset >= 0);
+ALTER TABLE ibook.library ADD COLUMN IF NOT EXISTS bookmarks jsonb NOT NULL DEFAULT '[]';
 CREATE TABLE IF NOT EXISTS ibook.collections (
  id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES ibook.users ON DELETE CASCADE, name text NOT NULL,
  created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(user_id,name)

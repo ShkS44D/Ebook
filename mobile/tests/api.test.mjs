@@ -123,6 +123,27 @@ test("Neon-backed account, library, reading, collection and social workflows", a
         );
       },
     );
+    await t.test('reader settings, offsets and page bookmarks persist with account isolation', async () => {
+      const settings = { fontSize: 24, theme: 'calm', font: 'serif', bold: true, customize: true,
+        lineSpacing: 1.8, characterSpacing: 1, wordSpacing: 4, margins: 12, justify: true,
+        brightness: 0.6, appearance: 'device', scroll: true };
+      await request('/me', { token: a.token, method: 'PATCH', body: { reader_settings: settings } });
+      const bookmarks = [{ chapter: 0, offset: 50 }, { chapter: 2, offset: 20 }];
+      await request('/library/reading-guide', { token: a.token, method: 'PUT', body: { page: 1, reader_offset: 40, bookmarks, bookmarked: true } });
+      const me = await request('/me', { token: a.token });
+      assert.deepEqual(me.user.reader_settings, settings);
+      assert.equal(me.library[0].reader_offset, 40);
+      assert.deepEqual(me.library[0].bookmarks, bookmarks);
+      assert.equal((await request('/me', { token: b.token })).library.length, 0);
+      await request('/library/reading-guide', { token: a.token, method: 'PUT', body: { bookmarks: [{ chapter: 999, offset: 0 }] }, status: 400 });
+      await request('/library/reading-guide', { token: a.token, method: 'PUT', body: { page: 1, reader_offset: 999999 }, status: 400 });
+      await request('/library/reading-guide', { token: a.token, method: 'PUT', body: { reader_offset: 40 }, status: 400 });
+      await request('/me', { token: a.token, method: 'PATCH', body: { reader_settings: { ...settings, margins: 999 } }, status: 400 });
+      await request('/library/reading-guide', { token: a.token, method: 'PUT', body: { page: 2 } });
+      const updated = (await request('/me', { token: a.token })).library[0];
+      assert.equal(updated.reader_offset, 0);
+      assert.deepEqual(updated.bookmarks, bookmarks);
+    });
     await t.test(
       "collections persist, reject cross-account writes, and roll back invalid changes",
       async () => {

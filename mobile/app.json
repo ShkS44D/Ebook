@@ -8,6 +8,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": true,
       "bundleIdentifier": "com.ibook.uipreview"
     },
     "android": {
@@ -28,7 +29,8 @@
       "expo-font",
       "expo-secure-store",
       "expo-sharing",
-      "expo-video"
+      "expo-video",
+      "expo-screen-orientation"
     ],
     "scheme": "ibook"
   }

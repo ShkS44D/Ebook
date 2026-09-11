@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-community/slider": "5.2.0",
     "@react-navigation/bottom-tabs": "^7.18.18",
     "@react-navigation/native": "^7.3.18",
     "@react-navigation/native-stack": "^7.18.10",
@@ -13,12 +14,16 @@
     "dotenv": "^17.4.2",
     "expo": "~57.0.21",
     "expo-blur": "~57.0.2",
+    "expo-brightness": "~57.0.1",
+    "expo-clipboard": "~57.0.1",
     "expo-document-picker": "~57.0.1",
     "expo-file-system": "~57.0.6",
     "expo-font": "~57.0.3",
     "expo-glass-effect": "~57.0.2",
     "expo-linear-gradient": "~57.0.1",
+    "expo-screen-orientation": "~57.0.2",
     "expo-secure-store": "~57.0.3",
+    "expo-sensors": "~57.0.2",
     "expo-sharing": "~57.0.18",
     "expo-status-bar": "~57.0.1",
     "expo-video": "~57.0.3",
@@ -56,7 +61,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "node --stack-size=8192 node_modules/typescript/bin/tsc --noEmit",
+    "test:reader": "node --test tests/reader.test.mjs"
   },
   "private": true
 }

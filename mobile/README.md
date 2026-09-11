@@ -87,7 +87,21 @@ The dependency audit currently reports moderate advisories in the existing Expo 
 
 ## Page reels
 
-Every available reading page has a reels section. In the current reader, a page is a **chapter entry**, identified by `(book_id, zero-based chapter index)`; it is independent of screen size or font size. Keep chapter indexes stable once people publish reels. Adding true ebook pagination will require stable content anchors and an anchor migration. The four guide chapters have starter clips; catalog-only books still cannot be opened without licensed text.
+Every available chapter has a reels section, opened from the reader menu. Reels remain identified by `(book_id, zero-based chapter index)`, independent of the reader's display pagination. Keep chapter indexes stable once people publish reels. The four guide chapters have starter clips; catalog-only books still cannot be opened without licensed text.
+
+### Reader controls
+
+Tap the reading text or page number to open the floating menu. Contents lists chapters with their current display page numbers and a separate bookmarks tab. Search finds literal, case-insensitive matches in the available full text, shows snippets (up to 200 matches), and opens and highlights the selected passage. Previous/next buttons and horizontal swipes turn pages; the scrolling control switches to continuous reading. Finish book saves completion.
+
+Original, Quiet, Paper, Bold, Calm, and Focus themes include font-size controls and a customization preview. Choose serif, sans serif, or monospace; toggle bold; adjust line spacing, character spacing, word spacing, margins and justification. Customization applies with the checkmark or cancels with the close button. Reset Theme restores the selected preset. Done saves preferences to the account. Fonts use available system families rather than Apple's proprietary Canela font. Native word spacing is approximated using hair spaces.
+
+The reader estimates display page breaks from the viewport and typography, with overflow scrolling to keep all text reachable. Display page totals can change with layout. Saved positions and individual bookmarks use a chapter index plus an original-text character offset, so reflow does not invalidate them. The existing library `page` field and reel links retain their chapter semantics. Schema startup migration adds `reader_offset` and `bookmarks` without removing existing library data. Scrolling debounces position saves; page navigation waits for a successful save and reports connection errors.
+
+Light, Dark and Match Device work on all platforms. Match Surroundings uses the ambient light sensor when available (typically Android); unsupported devices show the option as unavailable. Native brightness changes are restored when leaving the reader; web adjusts page brightness only. Rotation lock uses the device API and reports unsupported browsers. iPad builds require full-screen mode for rotation locking. Rebuild native apps after installing the new Expo modules.
+
+Share opens the real native or browser share sheet, with clipboard fallback on browsers without Web Share. Targets such as AirDrop, Mail or Notes are supplied by the operating system and installed apps. Reading links include chapter and offset; native links use `EXPO_PUBLIC_WEB_URL` when configured or `ibook://` otherwise.
+
+Validation: `npm run test:reader` covers reflow, literal search, legacy preferences and validation; `npm run test:api` covers database persistence, invalid positions and account isolation. Run `npm run typecheck` and `npm run build:web` for compile checks. Native brightness, orientation, sensors and share targets still need real-device testing.
 
 Readers can upload MP4/WebM videos of 1–90 seconds and up to 50 MB, or share HTTPS Instagram, YouTube and Vimeo post links. The server probes uploaded files rather than trusting their extensions, accepts supported video codecs, and checks upload ownership before publishing. There is a 50-upload quota per account and a combined 30 upload/publish operations per account per hour. Unpublished uploads are removed when the form is closed normally. Unexpected shutdowns can leave unpublished uploads; an operator should periodically review and remove abandoned files/rows. The tiny test MP4 is an original generated three-second color card, not third-party footage.
 

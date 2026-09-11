@@ -16,6 +16,7 @@ import nodemailer from "nodemailer";
 import { query, transaction, pool } from "./db.mjs";
 import { migrate } from "./migrate.mjs";
 import { reelsRouter, registerPublicReels } from "./reels.mjs";
+import { readerSettingsSchema, libraryUpdateSchema, validPosition } from "./reader-validation.mjs";
 const scrypt = promisify(scryptCallback);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const app = express();
@@ -330,12 +331,7 @@ app.patch("/api/me", async (req, res) => {
       goal: z.number().int().min(5).max(180).optional(),
       dark: z.boolean().optional(),
       notifications: z.boolean().optional(),
-      reader_settings: z
-        .object({
-          fontSize: z.number().int().min(14).max(30),
-          theme: z.enum(["paper", "light", "dark"]),
-        })
-        .optional(),
+      reader_settings: readerSettingsSchema.optional(),
     })
     .strict()
     .parse(req.body);
@@ -354,14 +350,7 @@ app.patch("/api/me", async (req, res) => {
 });
 app.put("/api/library/:id", async (req, res) => {
   const b = await book(req.params.id);
-  const data = z
-    .object({
-      page: z.number().int().min(0).optional(),
-      finished: z.boolean().optional(),
-      bookmarked: z.boolean().optional(),
-    })
-    .strict()
-    .parse(req.body);
+  const data = libraryUpdateSchema.parse(req.body);
   if (
     data.page !== undefined &&
     (!b.available || data.page >= b.chapters.length)
@@ -369,14 +358,20 @@ app.put("/api/library/:id", async (req, res) => {
     fail(400, "Invalid reading position.");
   if (data.finished && !b.available)
     fail(400, "This book is not available to read.");
+  if (data.reader_offset !== undefined && (data.page === undefined || !validPosition(b.chapters, { chapter: data.page, offset: data.reader_offset })))
+    fail(400, "Invalid reading offset.");
+  if (data.bookmarks?.some(p => !validPosition(b.chapters, p)))
+    fail(400, "Invalid bookmark position.");
   const [entry] = await query(
-    "INSERT INTO ibook.library(user_id,book_id,page,finished,bookmarked) VALUES($1,$2,COALESCE($3,0),COALESCE($4,false),COALESCE($5,false)) ON CONFLICT(user_id,book_id) DO UPDATE SET page=COALESCE($3,ibook.library.page),finished=COALESCE($4,ibook.library.finished),bookmarked=COALESCE($5,ibook.library.bookmarked),updated_at=now() RETURNING *",
+    "INSERT INTO ibook.library(user_id,book_id,page,finished,bookmarked,reader_offset,bookmarks) VALUES($1,$2,COALESCE($3,0),COALESCE($4,false),COALESCE($5,false),COALESCE($6,0),COALESCE($7::jsonb,'[]'::jsonb)) ON CONFLICT(user_id,book_id) DO UPDATE SET page=COALESCE($3,ibook.library.page),finished=COALESCE($4,ibook.library.finished),bookmarked=COALESCE($5,ibook.library.bookmarked),reader_offset=CASE WHEN $3 IS NOT NULL THEN COALESCE($6,0) ELSE ibook.library.reader_offset END,bookmarks=COALESCE($7::jsonb,ibook.library.bookmarks),updated_at=now() RETURNING *",
     [
       req.user.id,
       b.id,
       data.page ?? null,
       data.finished ?? null,
       data.bookmarked ?? null,
+      data.reader_offset ?? null,
+      data.bookmarks === undefined ? null : JSON.stringify(data.bookmarks),
     ],
   );
   res.json(entry);

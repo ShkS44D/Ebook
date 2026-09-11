@@ -1,16 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  AppState,
   Image,
   Platform,
   Share as NativeShare,
   View,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useBook } from "./use-book";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { api, useStore } from "./store";
-import { PageReels } from "./reels";
+
 import { Empty, Feedback, RequireAccount, useAction } from "./functional-ui";
 import {
   BookCover,
@@ -25,27 +24,6 @@ import {
   Title,
   Txt,
 } from "./ui";
-function useBook(id: string) {
-  const [book, setBook] = useState<any>(null),
-    [error, setError] = useState("");
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      setError("");
-      api("/books/" + encodeURIComponent(id))
-        .then((b) => {
-          if (active) setBook(b);
-        })
-        .catch((e) => {
-          if (active) setError(e.message);
-        });
-      return () => {
-        active = false;
-      };
-    }, [id]),
-  );
-  return { book, error };
-}
 export function BookScreen({ navigation, route }: any) {
   const store = useStore(),
     action = useAction();
@@ -139,240 +117,7 @@ export function BookScreen({ navigation, route }: any) {
     </Page>
   );
 }
-export function Reader({ navigation, route }: any) {
-  const store = useStore(),
-    action = useAction();
-  const id = route.params?.bookId || "reading-guide";
-  const { book, error } = useBook(id);
-  const entry = store.library.find((l) => l.book_id === id);
-  const linkedPage = Number(route.params?.page);
-  const [page, setPage] = useState(
-      Number.isInteger(linkedPage) && linkedPage >= 0
-        ? linkedPage
-        : entry?.page || 0,
-    ),
-    [settings, setSettings] = useState(false),
-    [fontSize, setFontSize] = useState(
-      store.user?.reader_settings.fontSize || 18,
-    ),
-    [theme, setTheme] = useState(store.user?.reader_settings.theme || "paper");
-  const currentUser = useRef(store.user);
-  useEffect(() => {
-    if (
-      Number.isInteger(linkedPage) &&
-      linkedPage >= 0 &&
-      book?.chapters?.length
-    )
-      setPage(Math.min(linkedPage, book.chapters.length - 1));
-  }, [id, linkedPage, book?.chapters?.length]);
-  currentUser.current = store.user;
-  useFocusEffect(
-    useCallback(() => {
-      if (!book?.available || !store.user) return;
-      let seconds = 0,
-        active = AppState.currentState === "active",
-        last = Date.now();
-      const flush = () => {
-        const count = seconds;
-        seconds = 0;
-        if (count)
-          api("/reading/" + id, "POST", { seconds: Math.min(count, 60) })
-            .then(() => store.refresh())
-            .catch((e) =>
-              action.setError("Reading time could not be saved: " + e.message),
-            );
-      };
-      const subscription = AppState.addEventListener("change", (state) => {
-        active = state === "active";
-        last = Date.now();
-        if (!active) flush();
-      });
-      const tick = setInterval(() => {
-        const now = Date.now();
-        if (
-          active &&
-          (Platform.OS !== "web" || document.visibilityState === "visible")
-        )
-          seconds += Math.min(2, Math.floor((now - last) / 1000));
-        last = now;
-        if (seconds >= 30) flush();
-      }, 1000);
-      return () => {
-        clearInterval(tick);
-        subscription.remove();
-        flush();
-      };
-    }, [id, book?.available, store.user?.id]),
-  );
-  async function move(next: number, finished = false) {
-    await store.mutate("/library/" + id, "PUT", { page: next, finished });
-    setPage(next);
-    navigation.setParams({ page: next });
-  }
-  const chapter = book?.chapters?.[page];
-  return (
-    <RequireAccount navigation={navigation}>
-      <Page>
-        <Header
-          navigation={navigation}
-          title={book?.title || "Reader"}
-          right={
-            <IconButton
-              name="settings-outline"
-              label="Reader settings"
-              onPress={() => setSettings(!settings)}
-            />
-          }
-        />
-        <Feedback
-          error={error || action.error}
-          busy={(!book && !error) || action.busy}
-        />
-        {book && !book.available ? (
-          <Empty text="The full text of this book is not available." />
-        ) : (
-          chapter && (
-            <>
-              {settings && (
-                <Card>
-                  <Txt bold>Text size: {fontSize}</Txt>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: 10,
-                      marginVertical: 12,
-                    }}
-                  >
-                    <Button
-                      title="Smaller"
-                      secondary
-                      disabled={fontSize <= 14}
-                      onPress={() => setFontSize(Math.max(14, fontSize - 2))}
-                    />
-                    <Button
-                      title="Larger"
-                      secondary
-                      disabled={fontSize >= 30}
-                      onPress={() => setFontSize(Math.min(30, fontSize + 2))}
-                    />
-                  </View>
-                  <View
-                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
-                  >
-                    {["paper", "light", "dark"].map((value) => (
-                      <Button
-                        key={value}
-                        title={value}
-                        secondary={theme !== value}
-                        onPress={() => setTheme(value)}
-                      />
-                    ))}
-                  </View>
-                  <Button
-                    title="Save reader settings"
-                    style={{ marginTop: 12 }}
-                    disabled={action.busy}
-                    onPress={() =>
-                      action.run(async () => {
-                        await store.mutate("/me", "PATCH", {
-                          reader_settings: { fontSize, theme },
-                        });
-                        setSettings(false);
-                      })
-                    }
-                  />
-                </Card>
-              )}
-              <View
-                style={{
-                  backgroundColor:
-                    theme === "dark"
-                      ? "#202027"
-                      : theme === "paper"
-                        ? "#F6EEDC"
-                        : "#FFFFFF",
-                  borderRadius: 22,
-                  padding: 24,
-                  marginVertical: 20,
-                }}
-              >
-                <Txt size={13} color={theme === "dark" ? "#CDC9DE" : "#655E55"}>
-                  Chapter {page + 1} of {book.chapters.length}
-                </Txt>
-                <Txt
-                  bold
-                  size={26}
-                  color={theme === "dark" ? "#FFFFFF" : "#34303D"}
-                  style={{ marginVertical: 20 }}
-                >
-                  {chapter.title}
-                </Txt>
-                <Txt
-                  size={fontSize}
-                  color={theme === "dark" ? "#ECE7F3" : "#34303D"}
-                  style={{ lineHeight: fontSize * 1.8 }}
-                >
-                  {chapter.text}
-                </Txt>
-              </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <Button
-                  title="Previous"
-                  secondary
-                  disabled={page === 0 || action.busy}
-                  onPress={() => action.run(() => move(page - 1))}
-                />
-                <Button
-                  title={
-                    page === book.chapters.length - 1
-                      ? "Finish book"
-                      : "Next chapter"
-                  }
-                  disabled={action.busy}
-                  onPress={() =>
-                    action.run(async () => {
-                      if (page === book.chapters.length - 1) {
-                        await move(page, true);
-                        navigation.navigate("Reading", { bookId: id });
-                      } else await move(page + 1);
-                    })
-                  }
-                />
-              </View>
-              <PageReels bookId={id} page={page} navigation={navigation} />
-              <Button
-                title={
-                  entry?.bookmarked ? "Remove bookmark" : "Bookmark this book"
-                }
-                secondary
-                style={{ marginTop: 16 }}
-                disabled={action.busy}
-                onPress={() =>
-                  action.run(() =>
-                    store.mutate("/library/" + id, "PUT", {
-                      page,
-                      bookmarked: !entry?.bookmarked,
-                    }),
-                  )
-                }
-              />
-              <Txt size={12} style={{ marginTop: 16 }}>
-                Your position is saved when you change chapters or bookmark.
-                Reading time is saved while this screen is active.
-              </Txt>
-            </>
-          )
-        )}
-      </Page>
-    </RequireAccount>
-  );
-}
+export { Reader } from "./reader-screen";
 export function Reading({ navigation, route }: any) {
   const store = useStore();
   const id = route.params?.bookId || "reading-guide";

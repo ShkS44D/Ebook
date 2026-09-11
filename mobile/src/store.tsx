@@ -8,6 +8,7 @@ import React, {
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { art } from "./assets";
+import type { ReaderSettings } from "./reader-model";
 export type CatalogBook = {
   id: string;
   title: string;
@@ -30,7 +31,7 @@ type User = {
   goal: number;
   dark: boolean;
   notifications: boolean;
-  reader_settings: { fontSize: number; theme: string };
+  reader_settings: Partial<ReaderSettings> & { fontSize: number; theme: string };
 };
 export type CollectionData = { id: string; name: string; book_ids: string[] };
 type State = {
