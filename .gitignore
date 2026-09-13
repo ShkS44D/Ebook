@@ -4,3 +4,4 @@ mobile/.expo/
 mobile/dist/
 *.log
 .vercel/
+output/

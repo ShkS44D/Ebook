@@ -1,0 +1,1352 @@
+[
+  {
+    "file": "android-icon-background.png",
+    "original": [
+      512,
+      512
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Lanczos (flat app icon; preserves alpha)",
+    "original_sha256": "fb139c2dee362ebf2070e23b96da6fc0d43f8492de38b8af1fd7223e19b5861d",
+    "app_bytes": 117106
+  },
+  {
+    "file": "android-icon-foreground.png",
+    "original": [
+      512,
+      512
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Lanczos (flat app icon; preserves alpha)",
+    "original_sha256": "9e3d0315a33c6799de601dd34cd8bf8cc3a8d16f3bf75592baec2ceb7240b391",
+    "app_bytes": 182805
+  },
+  {
+    "file": "android-icon-monochrome.png",
+    "original": [
+      432,
+      432
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Lanczos (flat app icon; preserves alpha)",
+    "original_sha256": "6371fc2c12e33ad2215a86c281db3d682a81bebe7c957a842c13b8bf00cceb83",
+    "app_bytes": 53591
+  },
+  {
+    "file": "favicon.png",
+    "original": [
+      48,
+      48
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      192,
+      192
+    ],
+    "method": "Lanczos (flat app icon; preserves alpha)",
+    "original_sha256": "a4e030697a7571b3e95d31860e4da55d2f98e5e861e2b55e414f45a8556828ba",
+    "app_bytes": 21696
+  },
+  {
+    "file": "icon.png",
+    "original": [
+      1024,
+      1024
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Lanczos (flat app icon; preserves alpha)",
+    "original_sha256": "119462bb78eb240a65c869fc067ee599639b3cb5a41953f25c07b17d2a8c7e0f",
+    "app_bytes": 390454
+  },
+  {
+    "file": "reference/author.jpg",
+    "original": [
+      102,
+      102
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      512,
+      512
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "da4cd1b090a622792df9f743b9835287e6962dc7879c3e0b7445435253dc4505",
+    "app_bytes": 46315
+  },
+  {
+    "file": "reference/avatar0.jpg",
+    "original": [
+      53,
+      54
+    ],
+    "master": [
+      3769,
+      3840
+    ],
+    "app": [
+      503,
+      512
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "8423fb376c79640ad24248cda4b706ce1abe812a62fdfe6287dbafe467089e36",
+    "app_bytes": 38331
+  },
+  {
+    "file": "reference/avatar1.jpg",
+    "original": [
+      53,
+      53
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      512,
+      512
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "f4aaeac87eaebaddf79d78c38de41437a6809965bb14bceec6bf6c0ee3632d64",
+    "app_bytes": 36114
+  },
+  {
+    "file": "reference/avatar2.jpg",
+    "original": [
+      53,
+      53
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      512,
+      512
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "743a3e2cd55c9ff73618045bf577a88e37fc260df28fef6ad9246aa604d9402c",
+    "app_bytes": 39893
+  },
+  {
+    "file": "reference/avatar3.jpg",
+    "original": [
+      53,
+      52
+    ],
+    "master": [
+      3840,
+      3768
+    ],
+    "app": [
+      512,
+      502
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "19bd349516b07b651fc76d68514aa6fa0be10ae6f0ff54078631b323ef6f8758",
+    "app_bytes": 39757
+  },
+  {
+    "file": "reference/avatar4.jpg",
+    "original": [
+      53,
+      52
+    ],
+    "master": [
+      3840,
+      3768
+    ],
+    "app": [
+      512,
+      502
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "98240d3cd31b311d0053dc3a633349f6f0b967a6667cc463fb6ce9d6c70ce8de",
+    "app_bytes": 39689
+  },
+  {
+    "file": "reference/bell-dark.jpg",
+    "original": [
+      299,
+      303
+    ],
+    "master": [
+      3789,
+      3840
+    ],
+    "app": [
+      1010,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "76214f839bfb899d8a0587135010f5519b1823ae2f552c74f0be81d55caf4be1",
+    "app_bytes": 75011
+  },
+  {
+    "file": "reference/bell-light.jpg",
+    "original": [
+      198,
+      210
+    ],
+    "master": [
+      3621,
+      3840
+    ],
+    "app": [
+      965,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "4aec9ff66b7cde436652ee00c2c0ae0f52d66a33491ad1a5e113aa58a44198fb",
+    "app_bytes": 68040
+  },
+  {
+    "file": "reference/bestiary.jpg",
+    "original": [
+      80,
+      112
+    ],
+    "master": [
+      2743,
+      3840
+    ],
+    "app": [
+      731,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "0c011964296574636086d0e9d9c9dae1acf8576e359b6abc1b1300c5e4b2f470",
+    "app_bytes": 113728
+  },
+  {
+    "file": "reference/bulb-dark.jpg",
+    "original": [
+      219,
+      222
+    ],
+    "master": [
+      3788,
+      3840
+    ],
+    "app": [
+      1010,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "cf87283681190fac430eff818057425fde4bac871f49067d8eb54d05f2848c4e",
+    "app_bytes": 68044
+  },
+  {
+    "file": "reference/bulb-light.jpg",
+    "original": [
+      164,
+      143
+    ],
+    "master": [
+      3840,
+      3348
+    ],
+    "app": [
+      1024,
+      893
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "51a8395fe5587fa1ef49ae26af143798c3c876c8ea5f87d05b5af8c777bdace2",
+    "app_bytes": 57339
+  },
+  {
+    "file": "reference/burning.jpg",
+    "original": [
+      81,
+      113
+    ],
+    "master": [
+      2753,
+      3840
+    ],
+    "app": [
+      734,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "dc307d7e8e4641eef604266547079806f2e904f5b3ffb3477b3092059308f253",
+    "app_bytes": 115538
+  },
+  {
+    "file": "reference/carrion.jpg",
+    "original": [
+      96,
+      130
+    ],
+    "master": [
+      2836,
+      3840
+    ],
+    "app": [
+      756,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "fce1dab30485a18474c3b2e4906f605a264fc3419512684c0a5177fe75a4103f",
+    "app_bytes": 71639
+  },
+  {
+    "file": "reference/category-0.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "607e37bb84780654ab896aa1ce36c7271aecfd01fa77d88dc814a4700245d586",
+    "app_bytes": 86049
+  },
+  {
+    "file": "reference/category-1.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "b2534b3f9f46bcf9c3269a0682e3a665171e092e755ef1e568ef25adb315e95d",
+    "app_bytes": 86802
+  },
+  {
+    "file": "reference/category-10.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "c0422a8ba45120cadaac569ec4844628fe9a690d755839cff7d919dbc87865be",
+    "app_bytes": 90998
+  },
+  {
+    "file": "reference/category-11.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "b536bd6aa5d1b51e260eb75eaf6b93d63e75d67ae8101c5835c928c7efece9d8",
+    "app_bytes": 81617
+  },
+  {
+    "file": "reference/category-12.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "36cb5aef5621b2a3ade5c7ea1e40b73753d0bf0c9478092a5bdec3cb55aa4737",
+    "app_bytes": 85699
+  },
+  {
+    "file": "reference/category-13.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "91c4d68c56b36a269eb8bbb66c89e41f01952c3f94d697a7d55ebf0dc665fbb4",
+    "app_bytes": 83484
+  },
+  {
+    "file": "reference/category-14.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "118284f498289b697221b89c9f6e3868e6b34a6b3629908c782d0eacc342a550",
+    "app_bytes": 82820
+  },
+  {
+    "file": "reference/category-15.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "99230a622ac6d84e62b4a2b058b523d8d61d7aa8a561def20f7da63d3969c695",
+    "app_bytes": 78227
+  },
+  {
+    "file": "reference/category-2.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "8788d4628790606805ffc774f8eff71cbccf3d9a294c0008473174116919ee7c",
+    "app_bytes": 92105
+  },
+  {
+    "file": "reference/category-3.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "fcd40b7610b790a72a60386b45b589253633255e877cd789153e25b2fd308439",
+    "app_bytes": 65944
+  },
+  {
+    "file": "reference/category-4.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "27d85507e62422a3969ebfb0a3e236d58e3129f50ee03ccd3ca1a13381259a87",
+    "app_bytes": 101191
+  },
+  {
+    "file": "reference/category-5.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "47926253f83b039cb6acd04b5bdfe1ff034593af88d385f567e84fd2678917c6",
+    "app_bytes": 90701
+  },
+  {
+    "file": "reference/category-6.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "98ca1fcf174eed7d2696f07522b878eee6a0221319e25e4cc500a56e75c57a24",
+    "app_bytes": 84586
+  },
+  {
+    "file": "reference/category-7.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "136a559a9bba2e6a84b746d5a5a0368c586b8b885c180589e388229b3f838e32",
+    "app_bytes": 93001
+  },
+  {
+    "file": "reference/category-8.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "df940abcd041f529e2a5a89b2ea621f77a61c485e729c4bb846d3bcdccb3920c",
+    "app_bytes": 87229
+  },
+  {
+    "file": "reference/category-9.jpg",
+    "original": [
+      85,
+      87
+    ],
+    "master": [
+      3752,
+      3840
+    ],
+    "app": [
+      1000,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "4e78025ee10867b39e05ca6bb3a3efc4c4c56ccdef1455702e8c5f34964fd9f7",
+    "app_bytes": 77887
+  },
+  {
+    "file": "reference/check-dark.jpg",
+    "original": [
+      221,
+      221
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "5ff226c6e95b4e3a72a6492bc876e5a4344a220e1cdc11752d41809a7f527f01",
+    "app_bytes": 63248
+  },
+  {
+    "file": "reference/check-light.jpg",
+    "original": [
+      158,
+      143
+    ],
+    "master": [
+      3840,
+      3475
+    ],
+    "app": [
+      1024,
+      927
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "2b9f054462c5e03dc2844c70ec21e5deeff3195d672462074040a9b30c173775",
+    "app_bytes": 53558
+  },
+  {
+    "file": "reference/coffee-dark.jpg",
+    "original": [
+      224,
+      221
+    ],
+    "master": [
+      3840,
+      3789
+    ],
+    "app": [
+      1024,
+      1010
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "c0eb0dd3aa857c3a520fc0d256bfdfc84c9db3c20fdcd16eb75e82cd8dfced67",
+    "app_bytes": 76518
+  },
+  {
+    "file": "reference/coffee-light.jpg",
+    "original": [
+      187,
+      154
+    ],
+    "master": [
+      3840,
+      3162
+    ],
+    "app": [
+      1024,
+      843
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "09dff259333eb8b32e94df06a6cb5b90282c50fb983fc7024b27595843d477b9",
+    "app_bytes": 63265
+  },
+  {
+    "file": "reference/dune.jpg",
+    "original": [
+      26,
+      44
+    ],
+    "master": [
+      2269,
+      3840
+    ],
+    "app": [
+      605,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "25ae85a812327ec23724353be84e689313672ab13d88241dda77b7b5c4b1160a",
+    "app_bytes": 74524
+  },
+  {
+    "file": "reference/empty-dark.jpg",
+    "original": [
+      297,
+      319
+    ],
+    "master": [
+      3575,
+      3840
+    ],
+    "app": [
+      953,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "012ded2a7656e4eff375abf84de8af26b6d04e393fff8b5fe4f561eb79d7d9ec",
+    "app_bytes": 88072
+  },
+  {
+    "file": "reference/empty-light.jpg",
+    "original": [
+      205,
+      218
+    ],
+    "master": [
+      3611,
+      3840
+    ],
+    "app": [
+      963,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "2150db0d13d747b0f44759056b222d8273122af7981f1cdf6cda12e942756de2",
+    "app_bytes": 77804
+  },
+  {
+    "file": "reference/failure.jpg",
+    "original": [
+      105,
+      124
+    ],
+    "master": [
+      3252,
+      3840
+    ],
+    "app": [
+      867,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "3635d319d5e5ee08495b36524912d4d970090b3e1b97d6d41e2bcbb48f1e67b3",
+    "app_bytes": 76575
+  },
+  {
+    "file": "reference/flies.jpg",
+    "original": [
+      96,
+      130
+    ],
+    "master": [
+      2836,
+      3840
+    ],
+    "app": [
+      756,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "f7db98e109d3be693f9c1ea728a06e70a4b4f5d970fea57950541bd636d7c5ac",
+    "app_bytes": 158543
+  },
+  {
+    "file": "reference/friend.jpg",
+    "original": [
+      102,
+      99
+    ],
+    "master": [
+      3840,
+      3727
+    ],
+    "app": [
+      512,
+      497
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "21f70129865dbb7eb388acbfa722299b15c88ed528ffd7d4009f52e69db30e1e",
+    "app_bytes": 46764
+  },
+  {
+    "file": "reference/gold.jpg",
+    "original": [
+      81,
+      111
+    ],
+    "master": [
+      2802,
+      3840
+    ],
+    "app": [
+      747,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "15b277d1bad7190b9f1af1a27834dbe484b8194180493a60e65b1a1a7470e9db",
+    "app_bytes": 150127
+  },
+  {
+    "file": "reference/immortal.jpg",
+    "original": [
+      81,
+      114
+    ],
+    "master": [
+      2728,
+      3840
+    ],
+    "app": [
+      728,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "2724c8edc3427ecc67039699a7650f1a1f57b5fee25a3ec129ffa442f1282ce4",
+    "app_bytes": 152988
+  },
+  {
+    "file": "reference/invisible.jpg",
+    "original": [
+      94,
+      132
+    ],
+    "master": [
+      2735,
+      3840
+    ],
+    "app": [
+      729,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "2087f2b38d27ed972727c5c5ce87e0e4ac2fad79bbd3abcb7e84a1f5b825fe1d",
+    "app_bytes": 126139
+  },
+  {
+    "file": "reference/joshua.jpg",
+    "original": [
+      42,
+      43
+    ],
+    "master": [
+      3751,
+      3840
+    ],
+    "app": [
+      500,
+      512
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "2c5f06cb951b44ed9251439536015979588ad5981a12df04d9aa24e32cc8fc0a",
+    "app_bytes": 35692
+  },
+  {
+    "file": "reference/kevin.jpg",
+    "original": [
+      96,
+      132
+    ],
+    "master": [
+      2793,
+      3840
+    ],
+    "app": [
+      745,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "95caa3c3717bf8ace79b77cd6019385a296d5c25311b0e5f3f590c19a27f2519",
+    "app_bytes": 93650
+  },
+  {
+    "file": "reference/logo-dark.jpg",
+    "original": [
+      110,
+      173
+    ],
+    "master": [
+      2442,
+      3840
+    ],
+    "app": [
+      651,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "d242187e5619d4a861529c648c4d45c46a826493ac16573ea73e0f6fcd56fc19",
+    "app_bytes": 61529
+  },
+  {
+    "file": "reference/logo.jpg",
+    "original": [
+      77,
+      113
+    ],
+    "master": [
+      2617,
+      3840
+    ],
+    "app": [
+      698,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "48cb43a880aa337a630ff4cb09876f63a14720d2967c294aeca277a513de2a23",
+    "app_bytes": 60253
+  },
+  {
+    "file": "reference/love.jpg",
+    "original": [
+      81,
+      85
+    ],
+    "master": [
+      3659,
+      3840
+    ],
+    "app": [
+      976,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "8a876d48fab95909e8cf419d1c0282445f56f0ff28ed573388cb0797be00ecde",
+    "app_bytes": 170202
+  },
+  {
+    "file": "reference/mexican.jpg",
+    "original": [
+      282,
+      386
+    ],
+    "master": [
+      2805,
+      3840
+    ],
+    "app": [
+      748,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "178ac28fd77a51b9f84093269496ca1e709cb8a9902dda89d14695a87e2429e5",
+    "app_bytes": 151171
+  },
+  {
+    "file": "reference/murder.jpg",
+    "original": [
+      283,
+      386
+    ],
+    "master": [
+      2815,
+      3840
+    ],
+    "app": [
+      751,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "460268893da93ae7c7a3cf4d84c8ead932bcd7538a6012cc7d6c8d4103848af9",
+    "app_bytes": 168861
+  },
+  {
+    "file": "reference/olive.jpg",
+    "original": [
+      81,
+      110
+    ],
+    "master": [
+      2828,
+      3840
+    ],
+    "app": [
+      754,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "746e3d1bcf2874112442553c7c02df3aac3ecb1a339d7079ed3ee241e01d2077",
+    "app_bytes": 116513
+  },
+  {
+    "file": "reference/onboard1-dark.jpg",
+    "original": [
+      385,
+      402
+    ],
+    "master": [
+      3678,
+      3840
+    ],
+    "app": [
+      1471,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "fa5570e7ccfb86dcaa9895eafd5be3556bd74150dd594bb613d5247cd49b4154",
+    "app_bytes": 301839
+  },
+  {
+    "file": "reference/onboard1.jpg",
+    "original": [
+      264,
+      277
+    ],
+    "master": [
+      3660,
+      3840
+    ],
+    "app": [
+      1464,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "7ac0065ee573e631a10aa518c114ef501b7d989959642027d187871b9ec847be",
+    "app_bytes": 302957
+  },
+  {
+    "file": "reference/onboard2-dark.jpg",
+    "original": [
+      385,
+      410
+    ],
+    "master": [
+      3606,
+      3840
+    ],
+    "app": [
+      1442,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "29a233be44e4ab7b967934f29ed304c58edf091862736f90830a2e3983340ba5",
+    "app_bytes": 215126
+  },
+  {
+    "file": "reference/onboard2.jpg",
+    "original": [
+      264,
+      279
+    ],
+    "master": [
+      3634,
+      3840
+    ],
+    "app": [
+      1453,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "cf750e48fd29a546f73202dcd01137fa79ddb529ec7344af1e4e64af3c0209d3",
+    "app_bytes": 255732
+  },
+  {
+    "file": "reference/onboard3-dark.jpg",
+    "original": [
+      385,
+      410
+    ],
+    "master": [
+      3606,
+      3840
+    ],
+    "app": [
+      1442,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "0f0edf4c2e97831b23c274ebe2b62b3459613d3a0121c0da2125ab9528a3a271",
+    "app_bytes": 233738
+  },
+  {
+    "file": "reference/onboard3.jpg",
+    "original": [
+      261,
+      276
+    ],
+    "master": [
+      3631,
+      3840
+    ],
+    "app": [
+      1453,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "74bf12755de4ad7080e69819647f3e195b8f09525df0610476718564f58e08c5",
+    "app_bytes": 240119
+  },
+  {
+    "file": "reference/orbit-dark.jpg",
+    "original": [
+      384,
+      390
+    ],
+    "master": [
+      3781,
+      3840
+    ],
+    "app": [
+      1512,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "5d154b95187cce4cea33a7f9f514a214dc52abd595ebc89aa3f507e4c8ae9b78",
+    "app_bytes": 328517
+  },
+  {
+    "file": "reference/orbit-light.jpg",
+    "original": [
+      244,
+      253
+    ],
+    "master": [
+      3703,
+      3840
+    ],
+    "app": [
+      1481,
+      1536
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "b460e0d6243c5c75871771468116cd27e46ed16ecad053aaaf9df85e90a8222c",
+    "app_bytes": 297829
+  },
+  {
+    "file": "reference/profile.jpg",
+    "original": [
+      133,
+      134
+    ],
+    "master": [
+      3811,
+      3840
+    ],
+    "app": [
+      508,
+      512
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "84e0738b69b51deae3b8e7f6940431f6543d4790a18c725bd5e88d970efd7cb1",
+    "app_bytes": 39816
+  },
+  {
+    "file": "reference/rain.jpg",
+    "original": [
+      95,
+      137
+    ],
+    "master": [
+      2663,
+      3840
+    ],
+    "app": [
+      710,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "143f188290e8aede9ec9ae1e7526a8d6953e3634cfff47f6e1d368aa39d114d0",
+    "app_bytes": 107684
+  },
+  {
+    "file": "reference/ready.jpg",
+    "original": [
+      95,
+      132
+    ],
+    "master": [
+      2764,
+      3840
+    ],
+    "app": [
+      737,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "39b3f54a5328db3a19dc7327d7100c6685448413672d3e075f3e6ad6f83a0ed2",
+    "app_bytes": 129605
+  },
+  {
+    "file": "reference/red.jpg",
+    "original": [
+      81,
+      112
+    ],
+    "master": [
+      2777,
+      3840
+    ],
+    "app": [
+      741,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "fed6efbd779cc3e86a53851040d3e54b7ff192643653e66f5755192c024ebbd3",
+    "app_bytes": 119432
+  },
+  {
+    "file": "reference/target.jpg",
+    "original": [
+      158,
+      124
+    ],
+    "master": [
+      3840,
+      3014
+    ],
+    "app": [
+      1024,
+      804
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "05d3582bf3dc5d5d4510cba47a94d3d862cfd06a6524cc8bb49c8f33583b33a0",
+    "app_bytes": 90482
+  },
+  {
+    "file": "reference/timer-dark.jpg",
+    "original": [
+      112,
+      106
+    ],
+    "master": [
+      3840,
+      3634
+    ],
+    "app": [
+      1024,
+      969
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "25cbf448ce3f910b00947f23051a202c416e51f5dcc59329ca53711e4ff9e70c",
+    "app_bytes": 93423
+  },
+  {
+    "file": "reference/timer-light.jpg",
+    "original": [
+      89,
+      74
+    ],
+    "master": [
+      3840,
+      3193
+    ],
+    "app": [
+      1024,
+      851
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "b19ba61faa5192fdca159c5441da2e3cf09640a698506c267acd4d7163424e3b",
+    "app_bytes": 73428
+  },
+  {
+    "file": "reference/trash-dark.jpg",
+    "original": [
+      227,
+      219
+    ],
+    "master": [
+      3840,
+      3705
+    ],
+    "app": [
+      1024,
+      988
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "0dab457ecdfc7d5237d2ade2c9730513c025a5ee7895bbc082f3f363f1a2484c",
+    "app_bytes": 78553
+  },
+  {
+    "file": "reference/trash-light.jpg",
+    "original": [
+      147,
+      141
+    ],
+    "master": [
+      3840,
+      3683
+    ],
+    "app": [
+      1024,
+      982
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "6061538900ccfe8ac56ea16b26f3081644ab0a959f7598e6ca030a991c09bb21",
+    "app_bytes": 81134
+  },
+  {
+    "file": "reference/trophy-dark.jpg",
+    "original": [
+      113,
+      113
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "56c863ca1da61a414269b47c918eadcff28bcc6a6f4ae822b8beea97f4e149c4",
+    "app_bytes": 86173
+  },
+  {
+    "file": "reference/trophy-light.jpg",
+    "original": [
+      88,
+      76
+    ],
+    "master": [
+      3840,
+      3316
+    ],
+    "app": [
+      1024,
+      884
+    ],
+    "method": "Real-ESRGAN x4plus 4x (65%) + source Lanczos (35%); Lanczos to 3840px",
+    "original_sha256": "1afc549cfcb2f3dc928b2690f61fa273541d4edc1557f00bd424dc6d043b4ab5",
+    "app_bytes": 65629
+  },
+  {
+    "file": "splash-icon.png",
+    "original": [
+      1024,
+      1024
+    ],
+    "master": [
+      3840,
+      3840
+    ],
+    "app": [
+      1024,
+      1024
+    ],
+    "method": "Lanczos (flat app icon; preserves alpha)",
+    "original_sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
+    "app_bytes": 19914
+  }
+]
