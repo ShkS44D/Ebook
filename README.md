@@ -1,4 +1,4 @@
-# iBook mobile UI
+# Book mobile UI
 
 React Native / Expo reading app for web, iOS and Android, based on the supplied screenshots in `ui/`. It includes an Express API backed by Neon, account authentication, saved reading progress, customizable reading themes, book search, bookmarks, collections, reviews, messaging and page-linked video reels. Payments and licensed catalog text are not configured; the original reading guide is available to read.
 
