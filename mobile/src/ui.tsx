@@ -290,6 +290,10 @@ export function Section({ title, children, light = false, right }: any) {
     </View>
   );
 }
+export const borderlessInputStyle = {
+  borderWidth: 0,
+  ...(Platform.OS === 'web' ? { outlineStyle: 'none', boxShadow: 'none' } as any : {}),
+};
 export function Field({
   label,
   placeholder,
@@ -314,10 +318,9 @@ export function Field({
       )}
       <View
         style={{
-          borderWidth: 1,
-          borderColor: focus ? purple : t.line,
+          borderWidth: 0,
           borderRadius: 18,
-          backgroundColor: t.dark ? t.card : t.bg,
+          backgroundColor: focus ? (t.dark ? "#33313B" : t.card) : (t.dark ? t.card : t.bg),
           minHeight: 56,
           flexDirection: "row",
           alignItems: "center",
@@ -326,6 +329,7 @@ export function Field({
       >
         {icon && <Icon name={icon} size={20} />}
         <TextInput
+          underlineColorAndroid="transparent"
           accessibilityLabel={label || placeholder}
           autoFocus={autoFocus}
           value={value}
@@ -346,6 +350,7 @@ export function Field({
             fontFamily: "Poppins_400Regular",
             fontSize: 14,
             color: t.ink,
+            ...borderlessInputStyle,
           }}
         />
         {secureTextEntry && (

@@ -1,3 +1,4 @@
+import { borderlessInputStyle } from './ui';
 import { ReaderToolbar } from './reader-toolbar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View, useColorScheme, useWindowDimensions } from 'react-native';
@@ -284,7 +285,7 @@ function ReaderSession({ id, navigation, route }: any) {
             {results.map((result, i) => <Pressable key={i} accessibilityRole="button" accessibilityLabel={`Search result ${i + 1}: ${result.title}`} disabled={action.busy} onPress={() => action.run(async () => { await jump(result); setHighlight(query); })} style={s.searchResult}><Text style={s.chapterTitle}>{result.title} · {pageAt(pages, result) + 1}</Text><Text style={{ fontSize: 16, lineHeight: 24, color: '#55514A', marginTop: 8 }}>{result.snippet}</Text></Pressable>)}
           </>}
         </ScrollView>
-        <View style={s.searchBar}><Ionicons name="search" size={23} color="#655D50" /><TextInput accessibilityLabel="Search in this book" placeholder="In this book" value={query} onChangeText={setQuery} autoFocus={panel === 'search'} returnKeyType="search" style={{ flex: 1, fontSize: 18, paddingVertical: 12, color: '#29251E' }} />{!!query && <RoundButton name="close" label="Clear book search" onPress={() => { setQuery(''); setHighlight(''); }} />}</View>
+        <View style={s.searchBar}><Ionicons name="search" size={23} color="#655D50" /><TextInput underlineColorAndroid="transparent" accessibilityLabel="Search in this book" placeholder="In this book" value={query} onChangeText={setQuery} autoFocus={panel === 'search'} returnKeyType="search" style={{ flex: 1, fontSize: 18, paddingVertical: 12, color: '#29251E', ...borderlessInputStyle }} />{!!query && <RoundButton name="close" label="Clear book search" onPress={() => { setQuery(''); setHighlight(''); }} />}</View>
         {!!action.error && <Text accessibilityRole="alert" style={s.notice}>{action.error}</Text>}
       </KeyboardAvoidingView>
     </ReaderSheet>
