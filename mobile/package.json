@@ -1,6 +1,7 @@
 {
   "name": "mobile",
   "version": "1.0.0",
+  "engines": { "node": "22.x" },
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",

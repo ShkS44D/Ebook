@@ -1,7 +1,7 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { put, get } from '@vercel/blob';
-import { digest } from './parsers.mjs';
+import { digest } from './hash.mjs';
 const root=path.resolve(process.env.BOOK_STORAGE_DIR || 'book-storage');
 export async function storeBytes(bytes) {
   const key=digest(bytes);

@@ -1,9 +1,9 @@
 import { unzipSync, strFromU8 } from 'fflate';
 import { load } from 'cheerio';
 import sanitize from 'sanitize-html';
-import { createHash } from 'node:crypto';
+import { digest } from './hash.mjs';
 import path from 'node:path';
-export const digest = value => createHash('sha256').update(value).digest('hex');
+export { digest } from './hash.mjs';
 const MAX_EXPANDED = 100 * 1024 * 1024;
 const allowedTags = ['p','div','section','article','h1','h2','h3','h4','h5','h6','em','strong','i','b','br','hr','blockquote','ul','ol','li','a','img','figure','figcaption','sup','sub','pre','span','table','tr','td','th','tbody'];
 export function safeMarkup(html) {

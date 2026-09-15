@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { query, transaction } from '../db.mjs';
 import { download } from './network.mjs';
-import { parseEpub,parseHtml,parsePdf,digest,validateBook } from './parsers.mjs';
+import { digest } from './hash.mjs';
 import { storeBytes,readBytes } from './storage.mjs';
 export const isBookAdmin = id => (process.env.BOOK_ADMIN_IDS || '').split(',').map(s=>s.trim()).includes(id);
 export const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
@@ -48,6 +48,8 @@ export async function publish(id) {
   });
 }
 export async function runNextImport() {
+  // Conversion dependencies belong to the worker, not the reader API startup.
+  const {parseEpub,parseHtml,parsePdf,validateBook}=await import('./parsers.mjs');
   const job=await transaction(async q=>{
     // Recover interrupted workers; SKIP LOCKED prevents duplicate work across processes.
     await q("UPDATE ibook.book_imports SET status='queued',lease_until=NULL WHERE status IN ('downloading','parsing','validating') AND lease_until<now() AND attempts<3");
