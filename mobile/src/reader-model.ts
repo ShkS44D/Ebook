@@ -5,7 +5,7 @@ export type ReaderSettings = {
   wordSpacing: number; margins: number; justify: boolean; brightness: number;
   appearance: 'light' | 'dark' | 'device' | 'surroundings'; scroll: boolean;
 };
-export type Chapter = { title: string; text: string };
+export type Chapter = { id?: string; title: string; text: string; length?: number; blocks?: any[] };
 export type Position = { chapter: number; offset: number };
 export type ReaderPage = Position & { text: string; end: number };
 export const themes: Record<ReaderTheme, { name: string; bg: string; ink: string; font: ReaderSettings['font']; bold: boolean }> = {
@@ -27,14 +27,30 @@ export function normalizeSettings(saved: any): ReaderSettings {
   return { ...defaults(theme), ...saved, theme };
 }
 // Page breaks are presentation only; saved offsets always refer to the original chapter.
-export function paginate(chapters: Chapter[], capacity: number): ReaderPage[] {
+export function paginate(chapters: Chapter[], capacity: number, charactersPerLine?: number): ReaderPage[] {
   const pages: ReaderPage[] = [];
   const size = Math.max(80, Math.floor(capacity));
   chapters.forEach((chapter, index) => {
+    if (chapter.text === undefined && chapter.length) {
+      for (let offset=0;offset<chapter.length;offset+=size) pages.push({chapter:index,offset,end:Math.min(chapter.length,offset+size),text:''});
+      return;
+    }
     const text = chapter.text || '';
     if (!text.length) pages.push({ chapter: index, offset: 0, end: 0, text: '' });
     for (let offset = 0; offset < text.length;) {
       let end = Math.min(text.length, offset + size);
+      if (charactersPerLine) {
+        const columns = Math.max(1, Math.floor(charactersPerLine));
+        let used = 0;
+        end = offset;
+        while (end < text.length && used < size) {
+          // Explicit blank lines consume vertical space even when they contain no words.
+          const cost = text[end] === '\n' ? columns - used % columns : 1;
+          if (used + cost > size && end > offset) break;
+          used += cost;
+          end++;
+        }
+      }
       if (end < text.length) {
         const boundary = text.lastIndexOf(' ', end);
         if (boundary > offset + size / 2) end = boundary + 1;

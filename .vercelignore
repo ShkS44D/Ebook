@@ -3,6 +3,8 @@ ui
 mobile/.env*
 mobile/node_modules
 mobile/media
+mobile/book-storage
+mobile/.expo
 mobile/dist
 mobile/verification
 output/

@@ -1,3 +1,4 @@
+import { CatalogScreen } from './catalog-screen';
 import { ReadingGoalIcon } from './reading-goal-icon';
 import React, { useState } from "react";
 import { Image, View } from "react-native";
@@ -179,29 +180,7 @@ export function Home({ navigation }: any) {
   );
 }
 export function Store({ navigation }: any) {
-  const { books } = useStore();
-  return (
-    <Page bottom={120}>
-      <Title>Discover</Title>
-      <Txt style={{ marginBottom: 24 }}>
-        Explore the catalog. Full text is available for titles marked “Read
-        free”.
-      </Txt>
-      <CategoryTiles navigation={navigation} />
-      <Section title="Read free">
-        <BookList
-          items={books.filter((b) => b.available)}
-          navigation={navigation}
-        />
-      </Section>
-      <Section title="Build your reading list">
-        <BookList
-          items={books.filter((b) => !b.available)}
-          navigation={navigation}
-        />
-      </Section>
-    </Page>
-  );
+  return <CatalogScreen navigation={navigation} title="Discover" />;
 }
 export function Library({ navigation }: any) {
   const { books, library, collections } = useStore();
@@ -264,53 +243,8 @@ export function Library({ navigation }: any) {
   );
 }
 export function Search({ navigation }: any) {
-  const { books } = useStore();
-  const [q, setQ] = useState("");
-  const items = books.filter((b) =>
-    (b.title + " " + b.author).toLowerCase().includes(q.trim().toLowerCase()),
-  );
-  return (
-    <Page bottom={120}>
-      <Title>Find your next book</Title>
-      <Field
-        label="Search books or authors"
-        placeholder="Enter a title or author"
-        value={q}
-        onChangeText={setQ}
-        icon="search-outline"
-      />
-      {q.trim() ? (
-        <Section title={`${items.length} results`}>
-          {!items.length ? (
-            <Empty text="No books found. Try another title or author." />
-          ) : (
-            <BookList items={items} navigation={navigation} />
-          )}
-        </Section>
-      ) : (
-        <>
-          <CategoryTiles navigation={navigation} />
-          <Section title="All books">
-            <BookList items={books} navigation={navigation} />
-          </Section>
-        </>
-      )}
-    </Page>
-  );
+  return <CatalogScreen navigation={navigation} title="Find your next book" />;
 }
 export function Category({ navigation, route }: any) {
-  const { books } = useStore();
-  const name = route.params?.category;
-  const items = books.filter((b) => b.category === name);
-  return (
-    <Page>
-      <Row title="Back" onPress={() => navigation.goBack()} />
-      <Title>{name || "Categories"}</Title>
-      {items.length ? (
-        <BookList items={items} navigation={navigation} />
-      ) : (
-        <Empty text="No books in this category yet." />
-      )}
-    </Page>
-  );
+  return <CatalogScreen navigation={navigation} title="Browse books" topic={route.params?.category || ''} />;
 }

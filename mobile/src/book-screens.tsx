@@ -8,7 +8,7 @@ import {
 import { useBook } from "./use-book";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { api, useStore } from "./store";
+import { api, useStore, catalogBook } from "./store";
 
 import { Empty, Feedback, RequireAccount, useAction } from "./functional-ui";
 import {
@@ -28,8 +28,8 @@ export function BookScreen({ navigation, route }: any) {
   const store = useStore(),
     action = useAction();
   const id = route.params?.bookId || "reading-guide";
-  const { book, error } = useBook(id);
-  const cover = store.books.find((b) => b.id === id);
+  const { book, error } = useBook(id,false);
+  const cover = book ? catalogBook(book) : store.books.find((b) => b.id === id);
   const saved = store.library.some((l) => l.book_id === id);
   if (!book)
     return (
@@ -67,6 +67,10 @@ export function BookScreen({ navigation, route }: any) {
           title="Start Reading"
           onPress={() => navigation.navigate("Reader", { bookId: id })}
         />
+      ) : book.provider === 'gutenberg' || book.provider === 'upload' ? (
+        <Card><Txt bold>{book.import_status === 'failed' ? 'This edition needs another attempt' : book.import_status === 'discoverable' ? 'Available to prepare' : 'Preparing your book'}</Txt><Txt style={{marginVertical:12}}>{book.import_status === 'review' ? 'The chapters are awaiting a quality review.' : 'You can save this book now and return when its chapters are ready.'}</Txt>
+          {['discoverable','failed'].includes(book.import_status)&&book.provider==='gutenberg'&&<Button title="Prepare book" disabled={action.busy} onPress={()=>store.user ? action.run(async()=>{await api('/catalog/import','POST',{id});await store.loadBooks();navigation.replace('Book',{bookId:id});}):navigation.navigate('SignIn')}/>}
+        </Card>
       ) : (
         <Card>
           <Txt bold>Full text unavailable</Txt>

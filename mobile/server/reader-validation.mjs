@@ -20,5 +20,5 @@ export const libraryUpdateSchema = z.object({
 }).strict();
 export function validPosition(chapters, position) {
   const chapter = chapters[position.chapter];
-  return !!chapter && position.offset <= (chapter.text || '').length;
+  return !!chapter && position.offset <= (chapter.length ?? (chapter.text || '').length);
 }

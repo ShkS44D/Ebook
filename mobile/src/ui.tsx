@@ -434,7 +434,7 @@ export function BookRow({
         </View>
         {"available" in book && (
           <Txt size={11} color={purple}>
-            {book.available ? "Read free" : "Reading list only"}
+            {book.available ? "Read free" : ('provider' in book && book.provider === 'gutenberg') ? ('import_status' in book && ['queued','review','parsing','downloading'].includes(String(book.import_status)) ? 'Being prepared' : 'Available to prepare') : "Reading list only"}
           </Txt>
         )}
       </Pressable>
@@ -451,6 +451,8 @@ export function BookRow({
   );
 }
 export function BookCover({ book, large = false }: any) {
+  const [failed,setFailed]=useState(false);
+  useEffect(()=>setFailed(false),[book.id,book.cover_url]);
   const width = large ? 170 : 78;
   const height = large ? 240 : 110;
   if (book.id === "reading-guide")
@@ -478,9 +480,9 @@ export function BookCover({ book, large = false }: any) {
         </Txt>
       </View>
     );
-  return (
-    <Image source={book.image} style={{ width, height, borderRadius: 9 }} />
-  );
+  return <View style={{width,height,borderRadius:9,overflow:'hidden',backgroundColor:'#47329E',padding:large?18:9,justifyContent:'space-between'}}><Txt size={large?11:7} color="#DCD4FF">iBOOK CLASSICS</Txt><Txt bold size={large?22:12} color="white" numberOfLines={5}>{book.title}</Txt><Txt size={large?10:7} color="#DCD4FF" numberOfLines={2}>{book.author}</Txt>
+    {!!book.image&&!failed&&<Image source={book.image} onError={()=>setFailed(true)} style={{position:'absolute',top:0,left:0,width,height,borderRadius:9}}/>}
+  </View>;
 }
 export function Card({ children, style }: any) {
   const t = useTheme();

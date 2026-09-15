@@ -4,6 +4,7 @@ export async function migrate() {
   await transaction(async (q) => {
     await q("SELECT pg_advisory_xact_lock(19782921)");
     await q(await readFile(new URL("./schema.sql", import.meta.url), "utf8"));
+    await q(await readFile(new URL("./books-schema.sql", import.meta.url), "utf8"));
     await q(
       await readFile(new URL("./reels-schema.sql", import.meta.url), "utf8"),
     );

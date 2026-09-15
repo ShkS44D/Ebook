@@ -11,6 +11,8 @@ import * as Clipboard from 'expo-clipboard';
 import { LightSensor } from 'expo-sensors';
 import { Ionicons } from '@expo/vector-icons';
 import { useBook } from './use-book';
+import { useReaderBook } from './use-reader-book';
+import { RichPassage } from './rich-passage';
 import { api, useStore } from './store';
 import { Feedback, RequireAccount, useAction } from './functional-ui';
 import { PageReels } from './reels';
@@ -24,7 +26,6 @@ export function Reader({ navigation, route }: any) {
 }
 function ReaderSession({ id, navigation, route }: any) {
   const store = useStore(), action = useAction();
-  const { book, error } = useBook(id);
   const entry = store.library.find(l => l.book_id === id);
   const cover = store.books.find(b => b.id === id);
   const insets = useSafeAreaInsets(), viewport = useWindowDimensions(), deviceAppearance = useColorScheme();
@@ -34,6 +35,7 @@ function ReaderSession({ id, navigation, route }: any) {
     chapter: Number.isInteger(linkedChapter) && linkedChapter >= 0 ? linkedChapter : entry?.page || 0,
     offset: Number.isInteger(linkedChapter) && linkedChapter >= 0 ? Math.max(0, linkedOffset || 0) : entry?.reader_offset || 0,
   }));
+  const { book, error, loadChapter } = useReaderBook(id,position.chapter);
   const [settings, setSettings] = useState(() => normalizeSettings(store.user?.reader_settings));
   const [menu, setMenu] = useState(false);
   const [panel, setPanel] = useState<'contents' | 'search' | 'themes' | 'reels' | null>(null);
@@ -65,22 +67,33 @@ function ReaderSession({ id, navigation, route }: any) {
   const sidePadding = 28 + (settings.customize ? settings.margins : 0);
   const contentWidth = Math.max(120, Math.min(viewport.width, 800) - sidePadding * 2);
   const contentHeight = Math.max(120, viewport.height - insets.top - insets.bottom - 170);
-  const capacity = Math.max(80, Math.floor(contentWidth / (settings.fontSize * 0.57 + (settings.customize ? settings.characterSpacing + settings.wordSpacing / 5 : 0))) * Math.max(2, Math.floor(contentHeight / (settings.fontSize * lineSpacing)) - 3));
-  const pages = useMemo(() => paginate(chapters, capacity), [book, capacity]);
+  const charactersPerLine = Math.max(1, Math.floor(contentWidth / (settings.fontSize * 0.57 + (settings.customize ? settings.characterSpacing + settings.wordSpacing / 5 : 0))));
+  const capacity = Math.max(80, charactersPerLine * Math.max(2, Math.floor(contentHeight / (settings.fontSize * lineSpacing)) - 3));
+  const pages = useMemo(() => paginate(chapters, capacity, charactersPerLine), [book, capacity, charactersPerLine]);
   const index = pageAt(pages, position);
   const page = pages[index];
   const chapterIndex = page?.chapter || 0;
   const chapter = chapters[chapterIndex];
+  const contentsEntries=useMemo(()=>{
+    const entries=book?.toc?.length?book.toc.map((item:any)=>({title:item.title,chapter:chapters.findIndex(c=>c.id===item.chapterId),offset:item.offset || 0})).filter((item:any)=>item.chapter>=0):chapters.map((c,chapter)=>({title:c.title,chapter,offset:0}));
+    return entries.filter((item:any,i:number,all:any[])=>all.findIndex(other=>other.chapter===item.chapter&&other.offset===item.offset&&other.title===item.title)===i);
+  },[book]);
+  useEffect(()=>{scrollPositions.current={};restoreScroll.current=true;scrollTarget.current=index;},[chapterIndex,capacity]);
   const remaining = pages.filter((p, i) => p.chapter === chapterIndex && i > index).length;
   const bookmarks: Position[] = entry?.bookmarks || [];
   const pageBookmarked = bookmarks.some(b => pageAt(pages, b) === index);
-  const results = useMemo(() => searchBook(chapters, query), [book, query]);
+  const [results,setResults]=useState<any[]>([]);
+  const [searchBusy,setSearchBusy]=useState(false),[searchError,setSearchError]=useState('');
+  useEffect(()=>{let active=true;setSearchError('');setResults([]);setSearchBusy(false);
+    if(query.trim().length<2)return;
+    setSearchBusy(true);const timer=setTimeout(()=>{void api('/books/'+encodeURIComponent(id)+'/search?q='+encodeURIComponent(query.trim())).then(rows=>{if(active)setResults(rows);}).catch(e=>{if(active)setSearchError(e.message);}).finally(()=>{if(active)setSearchBusy(false);});},300);
+    return()=>{active=false;clearTimeout(timer);};},[id,query]);
   const percent = entry?.finished ? 100 : Math.round(index / Math.max(pages.length, 1) * 100);
 
   useEffect(() => {
     if (Number.isInteger(linkedChapter) && linkedChapter >= 0 && chapters.length) {
       const nextChapter = Math.min(linkedChapter, chapters.length - 1);
-      setPosition({ chapter: nextChapter, offset: Math.min(Math.max(0, linkedOffset || 0), chapters[nextChapter].text.length) });
+      setPosition({ chapter: nextChapter, offset: Math.min(Math.max(0, linkedOffset || 0), chapters[nextChapter].length ?? chapters[nextChapter].text?.length ?? 0) });
     }
   }, [linkedChapter, linkedOffset, chapters.length]);
   useEffect(() => {
@@ -153,6 +166,7 @@ function ReaderSession({ id, navigation, route }: any) {
   }, [settings.appearance, ambientAvailable]);
 
   async function jump(next: Position, finished = false) {
+    await loadChapter(next.chapter);
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
     pendingPosition.current = null;
     await saveProgress(next, { finished });
@@ -211,7 +225,7 @@ function ReaderSession({ id, navigation, route }: any) {
 
   return <View style={[s.root, { backgroundColor: bg, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
     <StatusBar hidden={!menu && !panel} style={dark || settings.theme === 'quiet' ? 'light' : 'dark'} />
-    <View style={s.top}><Text numberOfLines={1} style={{ color: ink, opacity: 0.55, fontSize: 15, flex: 1, textAlign: 'center' }}>{menu ? `${remaining} ${remaining === 1 ? 'page' : 'pages'} left in chapter` : book?.title || 'Loading book…'}</Text>{menu && <RoundButton name="close" label="Exit reader" color={ink} onPress={() => navigation.goBack()} />}</View>
+    <View style={s.top}><Text numberOfLines={1} style={{ color: ink, opacity: 0.55, fontSize: 15, flex: 1, textAlign: 'center' }}>{menu ? `${remaining} ${remaining === 1 ? 'page' : 'pages'} left in chapter` : book?.title || 'Loading book…'}</Text>{menu && <RoundButton name="close" label="Exit reader" color={ink} onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main')} />}</View>
     {(error || action.error || !book) && <View style={{ paddingHorizontal: 24 }}><Feedback error={error || action.error} busy={!book && !error} /></View>}
     {book && !book.available && <Text style={[s.empty, { color: ink }]}>The full text of this book is not available.</Text>}
     {page && <ScrollView ref={readingView} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: sidePadding, paddingBottom: 24 }} showsVerticalScrollIndicator={settings.scroll}
@@ -233,15 +247,21 @@ function ReaderSession({ id, navigation, route }: any) {
       }}
       onTouchStart={event => { touchStart.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }; }}
       onTouchEnd={event => { const dx = event.nativeEvent.pageX - touchStart.current.x, dy = event.nativeEvent.pageY - touchStart.current.y; if (!settings.scroll && Math.abs(dx) > 70 && Math.abs(dy) < 50) step(dx < 0 ? 1 : -1); }}>
-      {(settings.scroll ? pages : [page]).map((part, i) => <Pressable key={settings.scroll ? i : index} onLayout={event => {
+      {(settings.scroll ? pages.filter(p=>p.chapter===chapterIndex) : [page]).map((part, i) => <Pressable key={settings.scroll ? part.offset : index} onLayout={event => {
         if (!settings.scroll) return;
-        scrollPositions.current[i] = event.nativeEvent.layout.y;
-        if (restoreScroll.current && i === scrollTarget.current) {
+        const globalIndex=pages.indexOf(part);
+        scrollPositions.current[globalIndex] = event.nativeEvent.layout.y;
+        if (restoreScroll.current && globalIndex === scrollTarget.current) {
           readingView.current?.scrollTo({ y: event.nativeEvent.layout.y, animated: false }); restoreScroll.current = false;
         }
       }} accessibilityRole="button" accessibilityLabel="Show reading controls" onPress={() => setMenu(value => !value)} style={settings.scroll ? { marginBottom: 24 } : undefined}>
         {part.offset === 0 && <Text style={[textStyle, { fontSize: settings.fontSize + 5, marginBottom: 22, fontWeight: '600' }]}>{chapters[part.chapter].title}</Text>}
-        <Text testID="reader-text" style={textStyle}>{renderText(part.text)}</Text>
+        {chapters[part.chapter].text===undefined?<Feedback busy/>:<RichPassage chapter={chapters[part.chapter]} page={part} textStyle={textStyle} highlight={highlight} onLink={target=>action.run(async()=>{
+          const [chapterId,anchorId]=target.slice(1).split(':');const targetIndex=chapters.findIndex(c=>c.id===chapterId);
+          if(targetIndex<0){setNotice('This reference is not available in this edition.');return;}
+          const loaded=await loadChapter(targetIndex);const anchor=loaded?.blocks?.find((b:any)=>b.type==='anchor'&&b.id===anchorId);
+          await jump({chapter:targetIndex,offset:anchor?.start || 0});
+        })}/>}
       </Pressable>)}
     </ScrollView>}
     {Platform.OS === 'web' && <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: (1 - settings.brightness) * 0.5 }]} />}
@@ -271,17 +291,18 @@ function ReaderSession({ id, navigation, route }: any) {
       <View style={s.bookHeader}>{cover && <Image source={cover.image} style={s.cover} />}<View style={{ flex: 1 }}><Text style={s.bookTitle}>{book?.title}</Text><Text style={s.subtle}>Page {index + 1} of {pages.length}</Text></View></View>
       <View style={s.tabs}>{(['chapters', 'bookmarks'] as const).map(tab => <Pressable key={tab} accessibilityRole="tab" accessibilityState={{ selected: contentsTab === tab }} onPress={() => setContentsTab(tab)} style={[s.tab, contentsTab === tab && { backgroundColor: '#E2E0DA' }]}><Text style={s.tabText}>{tab === 'chapters' ? 'Chapters' : `Bookmarks (${bookmarks.length})`}</Text></Pressable>)}</View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16 }}>
-        {contentsTab === 'chapters' ? chapters.map((c, chapter) => <Pressable key={chapter} accessibilityRole="button" accessibilityLabel={`Go to ${c.title}`} disabled={action.busy} onPress={() => action.run(() => jump({ chapter, offset: 0 }))} style={[s.chapter, chapter === chapterIndex && { backgroundColor: '#E2E1DD', borderRadius: 18 }]}><Text style={[s.chapterTitle, { flex: 1 }]}>{c.title}</Text><Text style={s.subtle}>{pages.findIndex(p => p.chapter === chapter) + 1}</Text></Pressable>)
-          : bookmarks.length ? [...bookmarks].sort((a, b) => a.chapter - b.chapter || a.offset - b.offset).map((mark, i) => <Pressable key={i} accessibilityRole="button" disabled={action.busy} onPress={() => action.run(() => jump(mark))} style={s.chapter}><Ionicons name="bookmark" size={19} color="#65543A" /><View style={{ flex: 1 }}><Text style={s.chapterTitle}>{chapters[mark.chapter]?.title}</Text><Text numberOfLines={2} style={s.subtle}>{chapters[mark.chapter]?.text.slice(mark.offset, mark.offset + 100)}</Text></View><Text style={s.subtle}>{pageAt(pages, mark) + 1}</Text></Pressable>) : <Text style={s.empty}>No bookmarked pages yet. Tap the bookmark in the reading menu to save your place.</Text>}
+        {contentsTab === 'chapters' ? contentsEntries.map((c:any,i:number) => <Pressable key={i} accessibilityRole="button" accessibilityLabel={`Go to ${c.title}`} disabled={action.busy} onPress={() => action.run(() => jump({ chapter:c.chapter, offset:c.offset }))} style={[s.chapter, c.chapter === chapterIndex && c.offset<=position.offset && (!contentsEntries[i+1] || contentsEntries[i+1].chapter>chapterIndex || contentsEntries[i+1].offset>position.offset) && { backgroundColor: '#E2E1DD', borderRadius: 18 }]}><Text style={[s.chapterTitle, { flex: 1 }]}>{c.title}</Text><Text style={s.subtle}>{pageAt(pages,c) + 1}</Text></Pressable>)
+          : bookmarks.length ? [...bookmarks].sort((a, b) => a.chapter - b.chapter || a.offset - b.offset).map((mark, i) => <Pressable key={i} accessibilityRole="button" disabled={action.busy} onPress={() => action.run(() => jump(mark))} style={s.chapter}><Ionicons name="bookmark" size={19} color="#65543A" /><View style={{ flex: 1 }}><Text style={s.chapterTitle}>{chapters[mark.chapter]?.title}</Text><Text numberOfLines={2} style={s.subtle}>{chapters[mark.chapter]?.text?.slice(mark.offset, mark.offset + 100) || 'Saved reading position'}</Text></View><Text style={s.subtle}>{pageAt(pages, mark) + 1}</Text></Pressable>) : <Text style={s.empty}>No bookmarked pages yet. Tap the bookmark in the reading menu to save your place.</Text>}
       </ScrollView>
       {!!action.error && <Text accessibilityRole="alert" style={s.notice}>{action.error}</Text>}
     </ReaderSheet>
     <ReaderSheet visible={panel === 'search'} title="Search Book" onClose={() => setPanel(null)}>
+      <Feedback busy={searchBusy} error={searchError}/>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 22, flexGrow: 1 }}>
           {!query.trim() ? <View style={s.searchEmpty}><Ionicons name="search-outline" size={42} color="#C2BBAE" /><Text style={s.empty}>Find a word or passage in this book.</Text></View> : <>
-            <Text style={s.subtle}>{results.length === 200 ? 'First 200' : results.length} results</Text>
-            {!results.length && <Text style={s.empty}>No matches for “{query.trim()}”. Try another word.</Text>}
+            <Text style={s.subtle}>{results.length === 100 ? 'First 100' : results.length} results</Text>
+            {!results.length&&!searchBusy&&!searchError && <Text style={s.empty}>{query.trim().length<2?'Enter at least two characters.':`No matches for “${query.trim()}”. Try another word.`}</Text>}
             {results.map((result, i) => <Pressable key={i} accessibilityRole="button" accessibilityLabel={`Search result ${i + 1}: ${result.title}`} disabled={action.busy} onPress={() => action.run(async () => { await jump(result); setHighlight(query); })} style={s.searchResult}><Text style={s.chapterTitle}>{result.title} · {pageAt(pages, result) + 1}</Text><Text style={{ fontSize: 16, lineHeight: 24, color: '#55514A', marginTop: 8 }}>{result.snippet}</Text></Pressable>)}
           </>}
         </ScrollView>

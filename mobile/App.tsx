@@ -34,6 +34,8 @@ import {
 } from "./src/ui";
 import { purple } from "./src/data";
 import { Home, Library, Store, Search, Category } from "./src/main-screens";
+import { CatalogBookScreen } from './src/catalog-screen';
+import { BookImportsScreen } from './src/book-imports-screen';
 import {
   Splash,
   Onboarding,
@@ -100,6 +102,8 @@ function Main() {
   );
 }
 const screens: any = {
+  CatalogBook: CatalogBookScreen,
+  BookImports: BookImportsScreen,
   Reels: ReelsScreen,
   Reel: ReelScreen,
   AddReel,
@@ -170,6 +174,7 @@ const appLinks: any = {
       Book: "book/:bookId?",
       Onboarding: "onboarding",
       Profile: "profile",
+      BookImports: "book-imports",
       Collections: "collections",
       Friends: "friends",
       SignIn: "signin",

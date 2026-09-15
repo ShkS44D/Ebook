@@ -57,6 +57,7 @@ export function Profile({ navigation }: any) {
             onPress={() => navigation.navigate(dest)}
           />
         ))}
+        {store.user?.book_admin&&<Row title="Book imports" onPress={()=>navigation.navigate('BookImports')}/>}
       </Page>
     </RequireAccount>
   );

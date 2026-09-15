@@ -17,6 +17,8 @@ import { query, transaction, pool } from "./db.mjs";
 import { migrate } from "./migrate.mjs";
 import { reelsRouter, registerPublicReels } from "./reels.mjs";
 import { readerSettingsSchema, libraryUpdateSchema, validPosition } from "./reader-validation.mjs";
+import { registerBookRoutes } from './books/routes.mjs';
+import { getBook, isBookAdmin } from './books/service.mjs';
 const scrypt = promisify(scryptCallback);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const app = express();
@@ -85,6 +87,7 @@ const publicUser = (u) => {
   const { password_hash, ...safe } = u;
   return {
     ...safe,
+    book_admin: isBookAdmin(u.id),
     reel_moderator: (process.env.REEL_MODERATOR_IDS || "")
       .split(",")
       .map((id) => id.trim())
@@ -141,9 +144,7 @@ async function auth(req, res, next) {
   next();
 }
 async function book(id) {
-  const [b] = await query("SELECT * FROM ibook.books WHERE id=$1", [id]);
-  if (!b) fail(404, "Book not found.");
-  return b;
+  return getBook(id);
 }
 async function collection(user, id, q = query) {
   idSchema.parse(id);
@@ -190,19 +191,20 @@ app.get("/api/books", async (req, res) => {
     .parse(req.query.category || "");
   res.json(
     await query(
-      "SELECT b.id,b.title,b.author,b.category,b.description,b.available,jsonb_array_length(b.chapters) AS pages,COALESCE(round(avg(r.rating),1),0) AS rating,count(r.user_id)::int AS reviews FROM ibook.books b LEFT JOIN ibook.reviews r ON r.book_id=b.id WHERE ($1='' OR strpos(lower(b.title || ' ' || b.author),lower($1))>0) AND ($2='' OR b.category=$2) GROUP BY b.id ORDER BY b.available DESC,b.title",
+      "SELECT b.id,b.title,b.author,b.category,b.description,b.available,b.cover_url,b.import_status,b.provider,CASE WHEN b.provider IS NULL THEN jsonb_array_length(b.chapters) ELSE (SELECT count(*)::int FROM ibook.book_chapters c WHERE c.book_id=b.id AND c.version=b.content_version) END AS pages,COALESCE(round(avg(r.rating),1),0) AS rating,count(r.user_id)::int AS reviews FROM ibook.books b LEFT JOIN ibook.reviews r ON r.book_id=b.id WHERE ($1='' OR strpos(lower(b.title || ' ' || b.author),lower($1))>0) AND ($2='' OR b.category=$2) GROUP BY b.id ORDER BY b.available DESC,b.popularity DESC,b.title LIMIT 1000",
       [q, category],
     ),
   );
 });
 app.get("/api/books/:id", async (req, res) => {
-  const b = await book(req.params.id);
+  const b = await getBook(req.params.id,{contents:req.query.metadata !== '1'});
   const reviews = await query(
     "SELECT r.rating,r.body,r.updated_at,r.user_id,u.name FROM ibook.reviews r JOIN ibook.users u ON u.id=r.user_id WHERE book_id=$1 ORDER BY updated_at DESC LIMIT 100",
     [b.id],
   );
   res.json({ ...b, reviews });
 });
+registerBookRoutes(app,auth);
 const authLimit = rateLimit({
   windowMs: 15 * 60000,
   limit: 30,
@@ -353,7 +355,7 @@ app.patch("/api/me", async (req, res) => {
   res.json(publicUser(user));
 });
 app.put("/api/library/:id", async (req, res) => {
-  const b = await book(req.params.id);
+  const b = await getBook(req.params.id,{contents:false});
   const data = libraryUpdateSchema.parse(req.body);
   if (
     data.page !== undefined &&
@@ -367,7 +369,7 @@ app.put("/api/library/:id", async (req, res) => {
   if (data.bookmarks?.some(p => !validPosition(b.chapters, p)))
     fail(400, "Invalid bookmark position.");
   const [entry] = await query(
-    "INSERT INTO ibook.library(user_id,book_id,page,finished,bookmarked,reader_offset,bookmarks) VALUES($1,$2,COALESCE($3,0),COALESCE($4,false),COALESCE($5,false),COALESCE($6,0),COALESCE($7::jsonb,'[]'::jsonb)) ON CONFLICT(user_id,book_id) DO UPDATE SET page=COALESCE($3,ibook.library.page),finished=COALESCE($4,ibook.library.finished),bookmarked=COALESCE($5,ibook.library.bookmarked),reader_offset=CASE WHEN $3 IS NOT NULL THEN COALESCE($6,0) ELSE ibook.library.reader_offset END,bookmarks=COALESCE($7::jsonb,ibook.library.bookmarks),updated_at=now() RETURNING *",
+    "INSERT INTO ibook.library(user_id,book_id,page,finished,bookmarked,reader_offset,bookmarks,reader_anchor) VALUES($1,$2,COALESCE($3,0),COALESCE($4,false),COALESCE($5,false),COALESCE($6,0),COALESCE($7::jsonb,'[]'::jsonb),$8::jsonb) ON CONFLICT(user_id,book_id) DO UPDATE SET page=COALESCE($3,ibook.library.page),finished=COALESCE($4,ibook.library.finished),bookmarked=COALESCE($5,ibook.library.bookmarked),reader_offset=CASE WHEN $3 IS NOT NULL THEN COALESCE($6,0) ELSE ibook.library.reader_offset END,bookmarks=COALESCE($7::jsonb,ibook.library.bookmarks),reader_anchor=COALESCE($8::jsonb,ibook.library.reader_anchor),updated_at=now() RETURNING *",
     [
       req.user.id,
       b.id,
@@ -376,6 +378,7 @@ app.put("/api/library/:id", async (req, res) => {
       data.bookmarked ?? null,
       data.reader_offset ?? null,
       data.bookmarks === undefined ? null : JSON.stringify(data.bookmarks),
+      data.page===undefined ? null : JSON.stringify({contentVersion:b.content_version,chapterId:b.chapters[data.page].id || String(data.page),progression:(data.reader_offset || 0)/Math.max(1,b.chapters[data.page].length ?? b.chapters[data.page].text.length),offset:data.reader_offset || 0}),
     ],
   );
   res.json(entry);

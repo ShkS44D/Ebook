@@ -1,0 +1,38 @@
+name: Process book imports
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: Maximum queued books to process
+        default: '20'
+        required: true
+  schedule:
+    - cron: '17,47 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: book-import-worker
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BOOK_BLOB_READ_WRITE_TOKEN: ${{ secrets.BOOK_BLOB_READ_WRITE_TOKEN }}
+      IMPORT_COUNT: ${{ inputs.count || '20' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Check worker configuration
+        run: node -e "if(!process.env.DATABASE_URL || !process.env.BOOK_BLOB_READ_WRITE_TOKEN)throw new Error('Configure DATABASE_URL and private BOOK_BLOB_READ_WRITE_TOKEN repository secrets.');"
+      - run: npm ci
+      - name: Process persistent queue
+        run: node server/books/cli.mjs work "$IMPORT_COUNT"

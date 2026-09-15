@@ -31,6 +31,19 @@ test('empty chapters and long unbroken words do not lose content or loop', () =>
   assert.equal(pages[0].text, '');
   assert.equal(pages.slice(1).map(p => p.text).join(''), 'x'.repeat(500));
 });
+test('blank lines consume page space while search offsets survive reflow', () => {
+  const text = 'Earlier passage.\n' + '\n'.repeat(30) + 'Call me Ishmael. ' + 'The story continues. '.repeat(30);
+  const chapters = [{ title: 'Imported chapter', text }];
+  for (const columns of [20, 40]) {
+    const pages = paginate(chapters, columns * 8, columns);
+    assert.equal(pages.map(p=>p.text).join(''), text);
+    assert.ok(pages.every(p=>p.text.split('\n').length <= 9));
+    const result = searchBook(chapters, 'Call me Ishmael')[0];
+    const page = pages[pageAt(pages, result)];
+    assert.ok(page.text.includes('Call me Ishmael'));
+    assert.ok(page.offset > text.indexOf('Earlier passage.'));
+  }
+});
 test('legacy themes migrate and expanded settings validate without silent field loss', () => {
   assert.equal(normalizeSettings({ theme: 'dark', fontSize: 18 }).theme, 'quiet');
   assert.equal(normalizeSettings({ theme: 'light', fontSize: 20 }).theme, 'original');

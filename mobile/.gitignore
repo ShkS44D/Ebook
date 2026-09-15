@@ -11,5 +11,6 @@ server/.env
 test-results/
 playwright-report/
 media/
+book-storage/
 
 .vercel

@@ -17,6 +17,7 @@ import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { query, transaction } from "./db.mjs";
 import { rankReels } from "./reel-ranking.mjs";
+import { getBook } from './books/service.mjs';
 const runFile = promisify(execFile);
 const mediaRoot = path.resolve(process.env.MEDIA_DIR || (process.env.VERCEL ? '/tmp/ibook-media' : 'media'));
 await mkdir(mediaRoot, { recursive: true });
@@ -63,7 +64,7 @@ const safeExternal = z
     );
   }, "Use an HTTPS Instagram, YouTube, or Vimeo post link.");
 async function pageContext(bookId, page) {
-  const [b] = await query("SELECT * FROM ibook.books WHERE id=$1", [bookId]);
+  const b = await getBook(bookId);
   if (!b || !b.available || !b.chapters[page])
     fail(404, "Reading page not found.");
   return { book: b, chapter: b.chapters[page] };

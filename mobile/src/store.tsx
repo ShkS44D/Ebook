@@ -10,6 +10,9 @@ import * as SecureStore from "expo-secure-store";
 import { art } from "./assets";
 import type { ReaderSettings } from "./reader-model";
 export type CatalogBook = {
+  cover_url?: string;
+  provider?: string;
+  import_status?: string;
   id: string;
   title: string;
   author: string;
@@ -22,6 +25,7 @@ export type CatalogBook = {
   image: any;
 };
 type User = {
+  book_admin?: boolean;
   reel_moderator?: boolean;
   id: string;
   email: string;
@@ -105,6 +109,9 @@ export async function api(
   }
 }
 const Context = createContext<any>(null);
+export function catalogBook(b: any): CatalogBook {
+  return {...b,rating:Number(b.rating || 0),reviews:Number(b.reviews || 0),image:b.cover_url?{uri:b.cover_url}:art[b.id as keyof typeof art]};
+}
 export function StoreProvider({ children }: any) {
   const [state, setState] = useState<State>(empty),
     [books, setBooks] = useState<CatalogBook[]>([]),
@@ -115,11 +122,7 @@ export function StoreProvider({ children }: any) {
   async function loadBooks() {
     const result = await api("/books");
     setBooks(
-      result.map((b: any) => ({
-        ...b,
-        rating: Number(b.rating),
-        image: art[b.id as keyof typeof art] || art["onboard1"],
-      })),
+      result.map(catalogBook),
     );
   }
   async function refresh() {
