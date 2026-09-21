@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS ibook.book_chapters (
  title text NOT NULL, html text NOT NULL, text text NOT NULL,
  blocks jsonb NOT NULL DEFAULT '[]', source_reference text,
  word_count integer NOT NULL, text_length integer NOT NULL,
- search_vector tsvector GENERATED ALWAYS AS (to_tsvector('simple', text)) STORED,
  PRIMARY KEY(book_id,version,id), UNIQUE(book_id,version,ordinal)
 );
-CREATE INDEX IF NOT EXISTS chapter_search ON ibook.book_chapters USING gin(search_vector);
+-- Passage search uses exact text offsets; a second generated text index is unnecessary.
+DROP INDEX IF EXISTS ibook.chapter_search;
 CREATE TABLE IF NOT EXISTS ibook.book_imports (
  id uuid PRIMARY KEY, book_id text NOT NULL REFERENCES ibook.books ON DELETE CASCADE,
  status text NOT NULL DEFAULT 'queued', attempts integer NOT NULL DEFAULT 0,
