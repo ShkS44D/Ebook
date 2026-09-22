@@ -92,9 +92,10 @@ const cookieOptions = {
 };
 const publicUser = (u) => {
   const { password_hash, avatar_bytes, avatar_mime, ...safe } = u;
+  const avatarVersion = new Date(u.avatar_updated_at || u.created_at).getTime();
   return {
     ...safe,
-    avatar_url: u.avatar_url || avatar_bytes ? `/avatars/${u.id}` : null,
+    avatar_url: u.avatar_url || avatar_bytes ? `/avatars/${u.id}?v=${avatarVersion}` : null,
     book_admin: isBookAdmin(u.id),
     reel_moderator: (process.env.REEL_MODERATOR_IDS || "")
       .split(",")
@@ -331,7 +332,7 @@ app.get("/api/me", async (req, res) => {
         [uid],
       ),
       query(
-        "SELECT f.*,u.id,u.name,u.bio,u.avatar_preset,CASE WHEN u.avatar_bytes IS NOT NULL OR u.avatar_url IS NOT NULL THEN '/avatars/'||u.id END avatar_url FROM ibook.friends f JOIN ibook.users u ON u.id=CASE WHEN f.sender=$1 THEN f.recipient ELSE f.sender END WHERE (f.sender=$1 OR f.recipient=$1) ORDER BY f.created_at DESC",
+        "SELECT f.*,u.id,u.name,u.bio,u.avatar_preset,CASE WHEN u.avatar_bytes IS NOT NULL OR u.avatar_url IS NOT NULL THEN '/avatars/'||u.id||'?v='||(extract(epoch from u.avatar_updated_at)*1000)::bigint END avatar_url FROM ibook.friends f JOIN ibook.users u ON u.id=CASE WHEN f.sender=$1 THEN f.recipient ELSE f.sender END WHERE (f.sender=$1 OR f.recipient=$1) ORDER BY f.created_at DESC",
         [uid],
       ),
     ]);
@@ -360,7 +361,7 @@ app.patch("/api/me", async (req, res) => {
     .strict()
     .parse(req.body);
   const entries = Object.entries(data);
-  if (data.avatar_url === null) entries.push(["avatar_bytes", null], ["avatar_mime", null]);
+  if (data.avatar_url === null) entries.push(["avatar_bytes", null], ["avatar_mime", null], ["avatar_updated_at", new Date()]);
   if (!entries.length) fail(400, "No changes supplied.");
   const [user] = await query(
     `UPDATE ibook.users SET ${entries.map(([key], i) => `${key}=$${i + 2}`).join(",")} WHERE id=$1 RETURNING *`,
@@ -378,7 +379,7 @@ app.post("/api/me/avatar", avatarUpload.single("avatar"), async (req, res) => {
   let image;
   try { image = await sharp(req.file.buffer).rotate().resize(512, 512, { fit: "cover" }).webp({ quality: 82 }).toBuffer(); }
   catch { fail(400, "The selected file is not a valid image."); }
-  const [user] = await query("UPDATE ibook.users SET avatar_url=NULL,avatar_bytes=$2,avatar_mime='image/webp' WHERE id=$1 RETURNING *", [req.user.id, image]);
+  const [user] = await query("UPDATE ibook.users SET avatar_url=NULL,avatar_bytes=$2,avatar_mime='image/webp',avatar_updated_at=now() WHERE id=$1 RETURNING *", [req.user.id, image]);
   res.json(publicUser(user));
 });
 app.put("/api/library/:id", async (req, res) => {
@@ -518,7 +519,7 @@ app.get("/api/people", async (req, res) => {
   if (search.trim().length < 2) return res.json([]);
   res.json(
     await query(
-      "SELECT id,name,bio,avatar_preset,CASE WHEN avatar_bytes IS NOT NULL OR avatar_url IS NOT NULL THEN '/avatars/'||id END avatar_url FROM ibook.users u WHERE id<>$1 AND strpos(lower(name),lower($2))>0 AND NOT EXISTS(SELECT 1 FROM ibook.blocks WHERE (user_id=$1 AND blocked_id=u.id) OR (user_id=u.id AND blocked_id=$1)) ORDER BY name LIMIT 30",
+      "SELECT id,name,bio,avatar_preset,CASE WHEN avatar_bytes IS NOT NULL OR avatar_url IS NOT NULL THEN '/avatars/'||id||'?v='||(extract(epoch from avatar_updated_at)*1000)::bigint END avatar_url FROM ibook.users u WHERE id<>$1 AND strpos(lower(name),lower($2))>0 AND NOT EXISTS(SELECT 1 FROM ibook.blocks WHERE (user_id=$1 AND blocked_id=u.id) OR (user_id=u.id AND blocked_id=$1)) ORDER BY name LIMIT 30",
       [req.user.id, search.trim()],
     ),
   );
