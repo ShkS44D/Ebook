@@ -1,6 +1,6 @@
 import { ReadingGoalIcon } from './reading-goal-icon';
 import React, { useCallback, useState } from "react";
-import { Pressable, Switch, View } from "react-native";
+import { Modal, Platform, Pressable, Switch, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
 import { api, mediaUrl, useStore } from "./store";
@@ -12,6 +12,7 @@ import {
   Card,
   Field,
   Header,
+  Icon,
   IconButton,
   Page,
   Row,
@@ -19,6 +20,14 @@ import {
   Title,
   Txt,
 } from "./ui";
+import { PhotoCropper } from './photo-cropper';
+
+function ProfilePhoto({size,index,source,onPress}:{size:number;index:number;source?:any;onPress:()=>void}) {
+  return <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={onPress} style={{alignSelf:'flex-start'}}>
+    <Avatar size={size} ring index={index} source={source}/>
+    <View style={{position:'absolute',right:-2,bottom:-2,width:34,height:34,borderRadius:18,backgroundColor:'#3A3026',borderWidth:3,borderColor:'#F6F3EC',alignItems:'center',justifyContent:'center'}}><Icon name="camera" size={17} color="white"/></View>
+  </Pressable>;
+}
 export function Profile({ navigation }: any) {
   const store = useStore();
   return (
@@ -34,7 +43,7 @@ export function Profile({ navigation }: any) {
             />
           }
         />
-        <Avatar size={90} index={store.user?.avatar_preset || 0} source={store.user?.avatar_url ? {uri:mediaUrl(store.user.avatar_url)} : undefined} />
+        <ProfilePhoto size={90} index={store.user?.avatar_preset || 0} source={store.user?.avatar_url ? {uri:mediaUrl(store.user.avatar_url)} : undefined} onPress={()=>navigation.navigate('EditProfile')}/>
         <Title>{store.user?.name}</Title>
         <Txt>
           {store.user?.bio || "Tell other readers a little about yourself."}
@@ -272,25 +281,40 @@ export function EditProfile({ navigation }: any) {
     [bio, setBio] = useState(store.user?.bio || ""),
     [phone, setPhone] = useState(store.user?.phone || ""),
     [avatarPreset, setAvatarPreset] = useState(store.user?.avatar_preset || 0),
-    [avatarUrl, setAvatarUrl] = useState<string|null>(store.user?.avatar_url || null);
+    [avatarUrl, setAvatarUrl] = useState<string|null>(store.user?.avatar_url || null),
+    [photoMenu,setPhotoMenu]=useState(false),[cropUri,setCropUri]=useState<string|null>(null);
+  async function uploadFile(file:any,name='profile.webp',type='image/webp') {
+    const form=new FormData();form.append('avatar',file instanceof Blob?file:{uri:file.uri,name:file.fileName || name,type:file.mimeType || type} as any);
+    const user=await store.mutate('/me/avatar','POST',form);setAvatarUrl(user.avatar_url);setCropUri(null);
+  }
   async function uploadPhoto() {
     const result = await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[1,1],quality:.75});
     if(result.canceled)return;
     const asset=result.assets[0];
     if(asset.fileSize && asset.fileSize>4*1024*1024)throw new Error('Choose a photo smaller than 4 MB.');
-    const form=new FormData();
-    if(asset.file)form.append('avatar',asset.file);
-    else form.append('avatar',{uri:asset.uri,name:asset.fileName || 'profile.jpg',type:asset.mimeType || 'image/jpeg'} as any);
-    const user=await store.mutate('/me/avatar','POST',form);setAvatarUrl(user.avatar_url);
+    if(Platform.OS==='web'){setCropUri(asset.uri);return;}
+    await uploadFile(asset);
   }
   return (
     <RequireAccount navigation={navigation}>
       <Page>
         <Header navigation={navigation} title="Edit Profile" />
         <View style={{alignItems:'center',marginBottom:20}}>
-          <Avatar size={104} ring index={avatarPreset} source={avatarUrl ? {uri:mediaUrl(avatarUrl)} : undefined}/>
-          <Button title="Upload a photo" secondary disabled={action.busy} style={{marginTop:14,minWidth:190}} onPress={()=>action.run(uploadPhoto)}/>
+          <ProfilePhoto size={104} index={avatarPreset} source={avatarUrl ? {uri:mediaUrl(avatarUrl)} : undefined} onPress={()=>setPhotoMenu(true)}/>
+          <Txt bold style={{marginTop:12}}>Tap to change photo</Txt>
         </View>
+        <Modal visible={photoMenu} transparent animationType="fade" onRequestClose={()=>setPhotoMenu(false)}>
+          <Pressable onPress={()=>setPhotoMenu(false)} style={{flex:1,backgroundColor:'#0008',justifyContent:'flex-end'}}>
+            <Pressable onPress={()=>{}} style={{backgroundColor:'#F8F5EE',padding:24,paddingBottom:36,borderTopLeftRadius:30,borderTopRightRadius:30,gap:12}}>
+              <Txt bold size={20}>Profile picture</Txt><Txt>Upload and crop a photo, or choose a reader avatar.</Txt>
+              <Button title={avatarUrl?'Replace photo':'Upload a photo'} icon="camera-outline" disabled={action.busy} onPress={()=>{setPhotoMenu(false);void action.run(uploadPhoto)}}/>
+              <Button title="Choose a reader avatar" secondary icon="people-outline" onPress={()=>{setPhotoMenu(false);setAvatarUrl(null)}}/>
+              {avatarUrl&&<Button title="Remove current photo" secondary icon="trash-outline" onPress={()=>{setPhotoMenu(false);setAvatarUrl(null)}}/>}
+              <Button title="Cancel" secondary onPress={()=>setPhotoMenu(false)}/>
+            </Pressable>
+          </Pressable>
+        </Modal>
+        {cropUri&&<PhotoCropper uri={cropUri} onCancel={()=>setCropUri(null)} onConfirm={file=>void action.run(()=>uploadFile(file))}/>}
         <Section title="Choose an avatar">
           <View style={{flexDirection:'row',flexWrap:'wrap',gap:12}}>
             {Array.from({length:22},(_,index)=><Pressable key={index} accessibilityRole="radio" accessibilityLabel={`Reader avatar ${index+1}`} accessibilityState={{checked:!avatarUrl&&avatarPreset===index}} onPress={()=>{setAvatarPreset(index);setAvatarUrl(null);}} style={{borderRadius:40,opacity:!avatarUrl&&avatarPreset===index?1:.72}}>

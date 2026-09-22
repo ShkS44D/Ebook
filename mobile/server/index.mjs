@@ -192,7 +192,8 @@ app.get("/api/avatars/:id", async (req, res) => {
   const id = idSchema.parse(req.params.id);
   const [user] = await query("SELECT avatar_bytes,avatar_mime FROM ibook.users WHERE id=$1", [id]);
   if (!user?.avatar_bytes) fail(404, "Profile photo not found.");
-  res.set("Cache-Control", "public, max-age=3600");
+  res.set("Cache-Control", "no-store");
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
   res.type(user.avatar_mime || "image/webp").send(user.avatar_bytes);
 });
 app.get("/api/books", async (req, res) => {

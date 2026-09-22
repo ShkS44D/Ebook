@@ -3,10 +3,11 @@ import { ReadingGoalIcon } from './reading-goal-icon';
 import React from "react";
 import { Image, View } from "react-native";
 import { art } from "./assets";
-import { useStore, CatalogBook } from "./store";
+import { useStore, CatalogBook, mediaUrl } from "./store";
 import { Empty, RequireAccount } from "./functional-ui";
 import {
   BookRow,
+  Avatar,
   Button,
   Card,
   Glass,
@@ -241,12 +242,7 @@ function Greeting({ navigation }: any) {
           maxWidth: 290,
         }}
       >
-        <View style={{ borderRadius: 46, overflow: "hidden" }}>
-          <Image
-            source={art.profile}
-            style={{ width: 46, height: 46, borderRadius: 46 }}
-          />
-        </View>
+        <Avatar size={46} index={user?.avatar_preset || 0} source={user?.avatar_url?{uri:mediaUrl(user.avatar_url)}:undefined}/>
         <View>
           <Txt bold size={20} color={t.heading} numberOfLines={1} style={{ maxWidth: 215 }}>
             Hello, {user?.name || "reader"}
