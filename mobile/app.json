@@ -30,7 +30,11 @@
       "expo-secure-store",
       "expo-sharing",
       "expo-video",
-      "expo-screen-orientation"
+      "expo-screen-orientation",
+      [
+        "expo-image-picker",
+        { "photosPermission": "Allow iBook to use a photo as your profile picture.", "microphonePermission": false }
+      ]
     ],
     "scheme": "ibook"
   }

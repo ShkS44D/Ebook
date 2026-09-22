@@ -30,16 +30,27 @@ export function ReaderToolbar({ visible, dark, bottom, notice, primary, actions 
   }, [visible, reduced, transition]);
   if (!mounted) return null;
   return <Animated.View pointerEvents={visible ? 'auto' : 'none'} accessibilityElementsHidden={!visible} importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'} style={[styles.position, { bottom, opacity: transition, transform: [{ translateY: transition.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
-    <Glass dark={dark} style={[styles.glass, { backgroundColor: dark ? '#24212BE8' : '#FFFCF1C9', borderColor: dark ? '#FFFFFF24' : '#FFFFFFDB' }]}>
-      {!!notice && <Text accessibilityLiveRegion="polite" style={{ color: dark ? '#EEE8FF' : '#514660', fontSize: 12, padding: 10 }}>{notice}</Text>}
-      <View style={styles.row}>{primary.map(action => <Item key={action.label} action={action} dark={dark} />)}</View>
-      <View style={[styles.divider, { backgroundColor: dark ? '#FFFFFF18' : '#43365412' }]} />
-      <View style={styles.row}>{actions.map(action => <Item key={action.label} action={action} dark={dark} />)}</View>
-    </Glass>
+    {!!notice && <Glass dark={dark} style={[styles.pill,{backgroundColor:dark?'#39352FEB':'#EFE4CEEB',padding:12}]}><Text accessibilityLiveRegion="polite" style={{color:dark?'#F1E7D4':'#241B0D',fontSize:13}}>{notice}</Text></Glass>}
+    {primary.slice(0,3).map(action=><Glass key={action.label} dark={dark} style={[styles.pill,{backgroundColor:action.selected?(dark?'#EAE0CE':'#231904'):(dark?'#39352FEB':'#EFE4CEC9')}]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={action.label} accessibilityState={{selected:!!action.selected}} onPress={action.onPress}
+        style={({pressed})=>[styles.menuRow,{opacity:pressed?.65:1}]}>
+        <Text style={{fontSize:16,color:action.selected?(dark?'#241B0D':'#FFF6E6'):(dark?'#F1E7D4':'#241B0D')}}>{action.selected?action.title:action.label}</Text>
+        <Ionicons name={action.icon} size={23} color={action.selected?(dark?'#241B0D':'#FFF6E6'):(dark?'#F1E7D4':'#241B0D')}/>
+      </Pressable>
+    </Glass>)}
+    <View style={styles.row}>{[...actions,...primary.slice(3)].map(action=><Glass key={action.label} dark={dark} style={[styles.circle,{backgroundColor:dark?'#39352FEB':'#EFE4CEC9'}]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={action.label} accessibilityState={{selected:!!action.selected}} onPress={action.onPress} style={({pressed})=>[styles.action,{opacity:pressed?.6:1}]}>
+        <Ionicons name={action.icon} size={23} color={dark?'#F1E7D4':'#241B0D'}/>
+      </Pressable>
+    </Glass>)}</View>
   </Animated.View>;
 }
 const styles = StyleSheet.create({
-  position: { position: 'absolute', alignSelf: 'center', width: '92%', maxWidth: 360, borderRadius: 28, boxShadow: '0 12px 36px #19112524' },
+  position: { position: 'absolute', right:20, width:270, maxWidth:'90%', gap:5 },
+  pill:{borderRadius:28,overflow:'hidden',boxShadow:'0 8px 28px #241B1012'},
+  menuRow:{minHeight:46,paddingHorizontal:16,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
+  circle:{borderRadius:25,overflow:'hidden',flex:1},
+  action:{height:46,alignItems:'center',justifyContent:'center'},
   glass: { borderRadius: 28, borderWidth: 1, padding: 7, overflow: 'hidden' },
   row: { flexDirection: 'row', gap: 4 },
   item: { minHeight: 46, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 19 },

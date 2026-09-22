@@ -110,7 +110,7 @@ export function PageReels({ bookId, page, navigation }: any) {
             }
           >
             <LinearGradient
-              colors={i % 2 ? ["#275F64", "#142D41"] : ["#6550BA", "#292143"]}
+              colors={i % 2 ? ["#3E4A3F", "#16241C"] : ["#4A3B2A", "#221A10"]}
               style={{
                 width: 190,
                 height: 245,
@@ -125,7 +125,7 @@ export function PageReels({ bookId, page, navigation }: any) {
                   justifyContent: "space-between",
                 }}
               >
-                <Txt size={11} color="#EEE8FF">
+                <Txt size={11} color="#F2ECDD">
                   PAGE {page + 1}
                 </Txt>
                 <Icon name="play-circle" color="white" size={32} />
@@ -134,10 +134,10 @@ export function PageReels({ bookId, page, navigation }: any) {
                 <Txt color="white" bold size={18}>
                   {r.title}
                 </Txt>
-                <Txt color="#E3DCF4" size={11} style={{ marginTop: 12 }}>
+                <Txt color="#E9E2D2" size={11} style={{ marginTop: 12 }}>
                   {r.creator_name}
                 </Txt>
-                <Txt color="#E3DCF4" size={11}>
+                <Txt color="#E9E2D2" size={11}>
                   {r.external_url
                     ? "External reel"
                     : `${Math.round(r.duration_seconds)} sec`}{" "}
@@ -360,7 +360,7 @@ function ReelContent({
   }
   return (
     <View>
-      <Txt size={12} color="#806CC6">
+      <Txt size={12} color="#8A8273">
         {reel.reason || "Shared for this page"}
       </Txt>
       <Txt size={23} bold style={{ marginTop: 6 }}>
@@ -370,8 +370,8 @@ function ReelContent({
         {reel.creator_name} · Page {reel.page + 1}
       </Txt>
       {reel.external_url ? (
-        <Card style={{ backgroundColor: "#EEE8FF", marginVertical: 16 }}>
-          <Txt color="#342B55">
+        <Card style={{ backgroundColor: "#EFECE4", marginVertical: 16 }}>
+          <Txt color="#3A322A">
             This creator’s reel plays on its original platform.
           </Txt>
           <Button
@@ -388,7 +388,7 @@ function ReelContent({
       <Txt style={{ lineHeight: 24, marginVertical: 16 }}>{reel.caption}</Txt>
       <View style={wrap}>
         {reel.tags.map((tag) => (
-          <Txt key={tag} size={12} color="#806CC6">
+          <Txt key={tag} size={12} color="#8A8273">
             #{tag}
           </Txt>
         ))}

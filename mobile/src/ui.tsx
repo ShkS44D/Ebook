@@ -27,7 +27,8 @@ import {
   isGlassEffectAPIAvailable,
 } from "expo-glass-effect";
 import { art } from "./assets";
-import { Book, purple } from "./data";
+import { Book, accent } from "./data";
+import { ReadingAvatar } from './reading-avatar';
 export const ThemeContext = createContext({
   dark: false,
   setDark: (_v: boolean) => {},
@@ -37,12 +38,13 @@ export function useTheme() {
   return {
     dark,
     setDark,
-    bg: dark ? "#111111" : "#FFFFFF",
-    card: dark ? "#282828" : "#F5F5F8",
-    ink: dark ? "#E4E2EB" : "#41414F",
-    muted: dark ? "#9995A6" : "#9C99AA",
-    heading: dark ? purple : "#41414F",
-    line: dark ? "#37343F" : "#ECEBF1",
+    bg: dark ? "#151412" : "#F6F3EC",
+    card: dark ? "#23211D" : "#FFFFFF",
+    ink: dark ? "#EAE4D8" : "#3A322A",
+    muted: dark ? "#A39C8F" : "#8A8273",
+    heading: dark ? "#F0E9DB" : "#2C251F",
+    line: dark ? "#33302A" : "#E6E1D5",
+    accent,
   };
 }
 export function Txt({
@@ -112,7 +114,7 @@ export function Tap({
 }
 export function Icon({
   name = "chevron-back",
-  color = purple,
+  color = accent,
   size = 23,
 }: any) {
   return <Ionicons name={name} size={size} color={color} />;
@@ -132,7 +134,7 @@ export function IconButton({ name, onPress, light = false, label }: any) {
         backgroundColor: light ? "#00000020" : t.card,
       }}
     >
-      <Icon name={name} color={light ? "white" : purple} />
+      <Icon name={name} color={light ? "white" : t.accent} />
     </Tap>
   );
 }
@@ -156,9 +158,9 @@ export function Button({
           paddingVertical: 15,
           paddingHorizontal: 18,
           borderRadius: 18,
-          backgroundColor: secondary ? t.card : purple,
+          backgroundColor: secondary ? t.card : t.accent,
           borderWidth: secondary ? 1 : 0,
-          borderColor: secondary ? purple : "transparent",
+          borderColor: secondary ? t.line : "transparent",
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "row",
@@ -168,9 +170,9 @@ export function Button({
       ]}
     >
       {icon && (
-        <Icon name={icon} size={20} color={secondary ? purple : "white"} />
+        <Icon name={icon} size={20} color={secondary ? t.accent : "white"} />
       )}
-      <Txt bold size={14} color={secondary ? purple : "white"}>
+      <Txt bold size={14} color={secondary ? t.accent : "white"}>
         {title}
       </Txt>
     </Tap>
@@ -178,7 +180,6 @@ export function Button({
 }
 export function Page({
   children,
-  purpleBg = false,
   scroll = true,
   style,
   bottom = 30,
@@ -186,9 +187,7 @@ export function Page({
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <View
-      style={{ flex: 1, backgroundColor: purpleBg && !t.dark ? purple : t.bg }}
-    >
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
       {scroll ? (
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -365,20 +364,18 @@ export function Field({
   );
 }
 export function Avatar({ index = 0, size = 46, source, ring = false }: any) {
+  const t = useTheme();
   return (
     <View
       style={{
         padding: ring ? 4 : 0,
         borderWidth: ring ? 3 : 0,
-        borderColor: purple,
+        borderColor: ring ? t.line : "transparent",
         borderRadius: size,
         alignSelf: "flex-start",
       }}
     >
-      <Image
-        source={source || art[`avatar${index % 5}` as keyof typeof art]}
-        style={{ width: size, height: size, borderRadius: size }}
-      />
+      {source ? <Image source={source} style={{ width: size, height: size, borderRadius: size }} /> : <ReadingAvatar index={index} size={size}/>}
     </View>
   );
 }
@@ -433,7 +430,7 @@ export function BookRow({
           </Txt>
         </View>
         {"available" in book && (
-          <Txt size={11} color={purple}>
+          <Txt size={11} color={t.accent}>
             {book.available ? "Read free" : ('provider' in book && book.provider === 'gutenberg') ? ('import_status' in book && ['queued','review','parsing','downloading'].includes(String(book.import_status)) ? 'Being prepared' : 'Available to prepare') : "Reading list only"}
           </Txt>
         )}
@@ -461,26 +458,26 @@ export function BookCover({ book, large = false }: any) {
         style={{
           width,
           height,
-          backgroundColor: "#47329E",
+          backgroundColor: "#2E241A",
           borderRadius: 9,
           padding: large ? 18 : 9,
           justifyContent: "space-between",
           borderLeftWidth: 5,
-          borderLeftColor: "#A798EF",
+          borderLeftColor: "#C9A96A",
         }}
       >
-        <Txt size={large ? 12 : 7} color="#DCD4FF">
+        <Txt size={large ? 12 : 7} color="#EFE3CC">
           THE iBOOK SERIES
         </Txt>
         <Txt size={large ? 24 : 12} bold color="white">
           A Small Guide to Reading
         </Txt>
-        <Txt size={large ? 11 : 7} color="#DCD4FF">
+        <Txt size={large ? 11 : 7} color="#EFE3CC">
           ONE PAGE AT A TIME
         </Txt>
       </View>
     );
-  return <View style={{width,height,borderRadius:9,overflow:'hidden',backgroundColor:'#47329E',padding:large?18:9,justifyContent:'space-between'}}><Txt size={large?11:7} color="#DCD4FF">iBOOK CLASSICS</Txt><Txt bold size={large?22:12} color="white" numberOfLines={5}>{book.title}</Txt><Txt size={large?10:7} color="#DCD4FF" numberOfLines={2}>{book.author}</Txt>
+  return <View style={{width,height,borderRadius:9,overflow:'hidden',backgroundColor:'#2E241A',padding:large?18:9,justifyContent:'space-between'}}><Txt size={large?11:7} color="#EFE3CC">iBOOK CLASSICS</Txt><Txt bold size={large?22:12} color="white" numberOfLines={5}>{book.title}</Txt><Txt size={large?10:7} color="#EFE3CC" numberOfLines={2}>{book.author}</Txt>
     {!!book.image&&!failed&&<Image source={book.image} onError={()=>setFailed(true)} style={{position:'absolute',top:0,left:0,width,height,borderRadius:9}}/>}
   </View>;
 }

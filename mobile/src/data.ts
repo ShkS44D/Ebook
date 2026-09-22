@@ -1,5 +1,6 @@
 import { art } from "./assets";
-export const purple = "#6952FF";
+// Warm ink accent shared with the reader's paper/ink palette.
+export const accent = "#3A322A";
 export const books = [
   ["mexican", "Mexican Gothic", "Silvia Moreno-Garcia"],
   ["murder", "Murder Board", "Brian Shea"],

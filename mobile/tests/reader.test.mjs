@@ -59,3 +59,40 @@ test('bookmark and offset validation rejects malformed and out-of-book positions
   assert.equal(validPosition(chapters, { chapter: 1, offset: 999 }), false);
   assert.equal(validPosition(chapters, { chapter: 1, offset: 5 }), true);
 });
+
+const { displayRuns, passageSegments, layoutPages, showChapterTitle, pageImages } = await import('../src/reader-layout.ts');
+const layout = {width:320,height:520,fontSize:22,lineHeight:34.1,fontFamily:'Georgia',bold:false,letterSpacing:0,wordSpacing:0,justify:false};
+test('reader removes imported spacer runs without changing source coordinates', () => {
+  const text='\n\n   Opening   words.\n \n \n\n'+'The next paragraph continues. '.repeat(60)+'\n\n\n';
+  const chapter={title:'Opening',text};
+  assert.equal(displayRuns(chapter).map(r=>r.text).join('').includes('\n\n\n'),false);
+  for(const width of [220,320,700]) {
+    const pages=layoutPages(chapter,0,{...layout,width});
+    assert.equal(pages.map(p=>p.text).join(''),text);
+    assert.ok(pages.every(p=>displayRuns(chapter,p.offset,p.end).some(r=>r.text.trim())));
+    const target={chapter:0,offset:text.indexOf('next paragraph')};
+    const page=pages[pageAt(pages,target)];assert.ok(page.offset<=target.offset && page.end>target.offset);
+  }
+});
+test('PDF physical lines reflow while EPUB verse and paragraph breaks survive',()=>{
+  const text='First line\nsecond line\n\nNew paragraph.';
+  const pdf={title:'Page 1',text};
+  assert.equal(displayRuns(pdf).map(r=>r.text).join(''),'First line second line\n\nNew paragraph.');
+  assert.equal(displayRuns({...pdf,title:'Poem'}).map(r=>r.text).join(''),text);
+});
+test('normalization preserves inline link and emphasis offsets and avoids duplicate titles',()=>{
+  const text='Heading\n\nA   bright reader follows a link.';
+  const start=text.indexOf('bright'),end=text.indexOf(' follows');
+  const chapter={title:'Heading',text,blocks:[{type:'text',start,end,bold:true,href:'#note'}]};
+  assert.equal(showChapterTitle(chapter),false);
+  const segments=passageSegments(chapter,0,text.length);
+  assert.equal(segments.map(s=>s.text).join(''),'Heading\n\nA bright reader follows a link.');
+  assert.equal(segments.find(s=>s.mark?.href).text,'bright reader');
+});
+test('illustrations are reserved exactly once and whitespace-only tails create no extra page',()=>{
+  const text='A passage. '.repeat(100)+'\n'.repeat(80);
+  const chapter={title:'Pictures',text,blocks:[{type:'image',start:45,end:45,src:'/image'},{type:'image',start:text.length,end:text.length,src:'/last'}]};
+  const pages=layoutPages(chapter,0,layout);
+  assert.equal(pages.flatMap(p=>pageImages(chapter,p)).length,2);
+  assert.ok(pages.every(p=>p.text.trim()));
+});

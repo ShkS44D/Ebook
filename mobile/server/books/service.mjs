@@ -41,9 +41,8 @@ export async function publish(id) {
     if(!['public-domain','licensed'].includes(b.rights.status))fail(403,'Publication rights are not verified.');
     const [count]=await q('SELECT count(*)::int AS n FROM ibook.book_chapters WHERE book_id=$1',[job.book_id]);
     if(!count.n)fail(409,'No chapters to publish.');
-    // Transitional text snapshot keeps the currently deployed reader usable during rollout.
-    // New APIs read normalized chapter rows; remove this snapshot after all clients migrate.
-    await q(`UPDATE ibook.books b SET available=true,import_status='ready',chapters=(SELECT jsonb_agg(jsonb_build_object('title',c.title,'text',c.text) ORDER BY c.ordinal) FROM ibook.book_chapters c WHERE c.book_id=b.id AND c.version=b.content_version) WHERE b.id=$1`,[job.book_id]);
+    // Reader and compatibility APIs both load normalized chapters now.
+    await q("UPDATE ibook.books SET available=true,import_status='ready',chapters='[]'::jsonb WHERE id=$1",[job.book_id]);
     const [ready]=await q("UPDATE ibook.book_imports SET status='ready',updated_at=now() WHERE id=$1 RETURNING *",[id]);return ready;
   });
 }

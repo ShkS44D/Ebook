@@ -13,10 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useBook } from './use-book';
 import { useReaderBook } from './use-reader-book';
 import { RichPassage } from './rich-passage';
+import { layoutPages, illustrationHeight, showChapterTitle, paragraphStyle } from './reader-layout';
+import { ReaderPager, ReaderPagerHandle, TurnTarget } from './reader-pager';
 import { api, useStore } from './store';
 import { Feedback, RequireAccount, useAction } from './functional-ui';
 import { PageReels } from './reels';
-import { Chapter, Position, normalizeSettings, pageAt, paginate, searchBook, themes } from './reader-model';
+import { Chapter, Position, ReaderPage, normalizeSettings, pageAt, paginate, searchBook, themes } from './reader-model';
 import { fonts, ReaderSheet, RoundButton, ThemePanel } from './reader-controls';
 
 export function Reader({ navigation, route }: any) {
@@ -38,6 +40,13 @@ function ReaderSession({ id, navigation, route }: any) {
   const { book, error, loadChapter } = useReaderBook(id,position.chapter);
   const [settings, setSettings] = useState(() => normalizeSettings(store.user?.reader_settings));
   const [menu, setMenu] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(false);
+  const lastPageTurn = useRef(0);
+  function toggleControls() {
+    if(pager.current?.ignoreTap() || Date.now()-lastPageTurn.current<650)return;
+    setControlsVisible(value=>!value);setMenu(false);
+  }
+  function hideControls() { setControlsVisible(false);setMenu(false); }
   const [panel, setPanel] = useState<'contents' | 'search' | 'themes' | 'reels' | null>(null);
   const [contentsTab, setContentsTab] = useState<'chapters' | 'bookmarks'>('chapters');
   const [query, setQuery] = useState(''), [highlight, setHighlight] = useState('');
@@ -45,7 +54,7 @@ function ReaderSession({ id, navigation, route }: any) {
   const [locked, setLocked] = useState(false);
   const [ambientAvailable, setAmbientAvailable] = useState(false), [ambientDark, setAmbientDark] = useState(false);
   const readingView = useRef<ScrollView>(null);
-  const touchStart = useRef({ x: 0, y: 0 });
+  const pager = useRef<ReaderPagerHandle>(null);
   const scrollPositions = useRef<Record<number, number>>({ 0: 0 });
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPosition = useRef<Position | null>(null);
@@ -63,13 +72,24 @@ function ReaderSession({ id, navigation, route }: any) {
     (settings.appearance === 'surroundings' && (ambientAvailable ? ambientDark : deviceAppearance === 'dark'));
   const bg = dark ? '#22211F' : palette.bg;
   const ink = dark ? '#E6E0D4' : palette.ink;
-  const lineSpacing = settings.customize ? settings.lineSpacing : 1.55;
-  const sidePadding = 28 + (settings.customize ? settings.margins : 0);
-  const contentWidth = Math.max(120, Math.min(viewport.width, 800) - sidePadding * 2);
-  const contentHeight = Math.max(120, viewport.height - insets.top - insets.bottom - 170);
+  const lineSpacing = settings.customize ? settings.lineSpacing : 1.45;
+  const sidePadding = 36 + (settings.customize ? settings.margins : 0);
+  const safeTop = insets.top || (Platform.OS === 'web' ? 24 : 0);
+  const headerHeight = Platform.OS === 'web' ? 88 : 58;
+  const footerHeight = 68;
+  const [readerSize, setReaderSize] = useState({width: 0, height: 0});
+  const contentWidth = Math.max(120, (readerSize.width || Math.min(viewport.width, 800)) - sidePadding * 2);
+  const contentHeight = Math.max(80, (readerSize.height || viewport.height) - safeTop - insets.bottom - headerHeight - footerHeight - 16);
   const charactersPerLine = Math.max(1, Math.floor(contentWidth / (settings.fontSize * 0.57 + (settings.customize ? settings.characterSpacing + settings.wordSpacing / 5 : 0))));
-  const capacity = Math.max(80, charactersPerLine * Math.max(2, Math.floor(contentHeight / (settings.fontSize * lineSpacing)) - 3));
-  const pages = useMemo(() => paginate(chapters, capacity, charactersPerLine), [book, capacity, charactersPerLine]);
+  const capacity = Math.max(80, charactersPerLine * Math.max(2, Math.floor(contentHeight / (settings.fontSize * lineSpacing))));
+  const layout = useMemo(() => ({ width:contentWidth, height:contentHeight, fontSize:settings.fontSize,
+    lineHeight:settings.fontSize * lineSpacing, fontFamily:fonts[settings.font], bold:settings.bold,
+    letterSpacing:settings.customize ? settings.characterSpacing : 0,
+    wordSpacing:settings.customize ? settings.wordSpacing : 0, justify:settings.customize && settings.justify,
+  }), [contentWidth, contentHeight, settings.fontSize, settings.font, settings.bold, settings.customize, settings.characterSpacing, settings.wordSpacing, settings.justify, lineSpacing]);
+  const pages = useMemo(() => chapters.flatMap((chapter, chapterIndex) => chapter.text === undefined
+    ? paginate([chapter], capacity, charactersPerLine).map(page => ({...page, chapter:chapterIndex}))
+    : layoutPages(chapter, chapterIndex, layout)), [book, capacity, charactersPerLine, layout]);
   const index = pageAt(pages, position);
   const page = pages[index];
   const chapterIndex = page?.chapter || 0;
@@ -78,7 +98,7 @@ function ReaderSession({ id, navigation, route }: any) {
     const entries=book?.toc?.length?book.toc.map((item:any)=>({title:item.title,chapter:chapters.findIndex(c=>c.id===item.chapterId),offset:item.offset || 0})).filter((item:any)=>item.chapter>=0):chapters.map((c,chapter)=>({title:c.title,chapter,offset:0}));
     return entries.filter((item:any,i:number,all:any[])=>all.findIndex(other=>other.chapter===item.chapter&&other.offset===item.offset&&other.title===item.title)===i);
   },[book]);
-  useEffect(()=>{scrollPositions.current={};restoreScroll.current=true;scrollTarget.current=index;},[chapterIndex,capacity]);
+  useEffect(()=>{scrollPositions.current={};restoreScroll.current=true;scrollTarget.current=index;},[chapterIndex,layout]);
   const remaining = pages.filter((p, i) => p.chapter === chapterIndex && i > index).length;
   const bookmarks: Position[] = entry?.bookmarks || [];
   const pageBookmarked = bookmarks.some(b => pageAt(pages, b) === index);
@@ -97,9 +117,6 @@ function ReaderSession({ id, navigation, route }: any) {
     }
   }, [linkedChapter, linkedOffset, chapters.length]);
   useEffect(() => {
-    if (!settings.scroll) readingView.current?.scrollTo({ y: 0, animated: false });
-  }, [index, settings.scroll]);
-  useEffect(() => {
     if (!settings.scroll) return;
     restoreScroll.current = true;
     scrollTarget.current = index;
@@ -108,7 +125,7 @@ function ReaderSession({ id, navigation, route }: any) {
       if (y !== undefined) { readingView.current?.scrollTo({ y, animated: false }); restoreScroll.current = false; }
     });
     return () => cancelAnimationFrame(frame);
-  }, [jumpVersion, settings.scroll, book, capacity]);
+  }, [jumpVersion, settings.scroll, book, layout]);
   function saveProgress(next: Position, extra: Record<string, unknown> = {}) {
     const work = progressQueue.current.catch(() => {}).then(() => store.mutate('/library/' + id, 'PUT', { page: next.chapter, reader_offset: next.offset, ...extra }));
     progressQueue.current = work;
@@ -167,20 +184,37 @@ function ReaderSession({ id, navigation, route }: any) {
 
   async function jump(next: Position, finished = false) {
     await loadChapter(next.chapter);
+    commitPosition(next, finished);
+  }
+  function commitPosition(next: Position, finished = false) {
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
     pendingPosition.current = null;
-    await saveProgress(next, { finished });
     setPosition(next);
     scrollTarget.current = pageAt(pages, next);
     setJumpVersion(v => v + 1);
     navigation.setParams({ page: next.chapter, offset: next.offset });
-    setPanel(null); setMenu(false);
+    setPanel(null); hideControls();
+    void saveProgress(next, { finished }).catch(e => action.setError('Position could not be saved: ' + e.message));
   }
-  const step = (delta: number) => action.run(async () => {
+  async function prepareTurn(delta:number):Promise<TurnTarget|null> {
     const next = pages[index + delta];
-    if (next) await jump(next);
-    else if (delta > 0 && page) { await jump(page, true); setNotice('Book completed. Well read!'); setMenu(true); }
-  });
+    if (next) {
+      let target=next, loaded=chapters[next.chapter];
+      if (next.chapter !== chapterIndex) {
+        loaded = await loadChapter(next.chapter);
+        if (!loaded) return null;
+        const reflow = layoutPages(loaded, next.chapter, layout);
+        target=delta<0 ? reflow[reflow.length-1] : reflow[0];
+      }
+      return {page:target,content:renderSheet(target,loaded,index+delta,false)};
+    }
+    if (delta > 0 && page) { commitPosition(page,true); setNotice('Book completed. Well read!'); setControlsVisible(true); setMenu(true); }
+    return null;
+  }
+  const step = (delta:number) => {
+    if(!settings.scroll){pager.current?.turn(delta);return;}
+    void action.run(async()=>{const target=await prepareTurn(delta);if(target)commitPosition(target.page);});
+  };
   async function bookmark() {
     if (!page) return;
     const next = pageBookmarked ? bookmarks.filter(b => pageAt(pages, b) !== index) : [...bookmarks, { chapter: page.chapter, offset: page.offset }];
@@ -222,13 +256,53 @@ function ReaderSession({ id, navigation, route }: any) {
     textAlign: settings.customize && settings.justify ? 'justify' as const : 'left' as const,
     ...(Platform.OS === 'web' ? { wordSpacing: settings.customize ? settings.wordSpacing : 0 } as any : {}) };
 
+  function passage(part:ReaderPage,source:Chapter) {
+    return <>
+      {part.offset===0 && showChapterTitle(source) && <Text style={[textStyle,paragraphStyle({type:'paragraph',start:0,end:0,heading:true,continuation:false},layout,false)]}>{source.title}</Text>}
+      {source.text===undefined ? <Feedback busy/> : <RichPassage imageHeight={illustrationHeight(layout)} chapter={source} page={part} textStyle={textStyle} highlight={highlight} onLink={target=>action.run(async()=>{
+        const [chapterId,anchorId]=target.slice(1).split(':');const targetIndex=chapters.findIndex(c=>c.id===chapterId);
+        if(targetIndex<0){setNotice('This reference is not available in this edition.');return;}
+        const loaded=await loadChapter(targetIndex);const anchor=loaded?.blocks?.find((b:any)=>b.type==='anchor'&&b.id===anchorId);
+        await jump({chapter:targetIndex,offset:anchor?.start || 0});
+      })}/>}
+    </>;
+  }
+  function heading(showMenu:boolean) {
+    return <View style={[s.top,{height:headerHeight}]}>
+      <Text numberOfLines={1} style={{color:ink,opacity:.55,fontSize:14,textAlign:'center',flex:1}}>{showMenu ? `${remaining} ${remaining===1?'page':'pages'} left in chapter` : book?.title || 'Loading book…'}</Text>
+      {showMenu && <View style={{position:'absolute',right:22}}><RoundButton name="close" label="Exit reader" color={ink} onPress={()=>navigation.canGoBack()?navigation.goBack():navigation.navigate('Main')}/></View>}
+    </View>;
+  }
+  function footer(pageNumber:number,showControls:boolean) {
+    return <View style={[s.footer,{height:footerHeight}]}>
+      <View style={{width:44}}>{showControls && <RoundButton name="chevron-back" label="Previous page" color={ink} disabled={!page || index===0 || action.busy} onPress={()=>step(-1)}/>}</View>
+      <Pressable accessibilityRole="button" accessibilityLabel={showControls?'Hide reading controls':'Show reading controls'} onPress={toggleControls} style={{padding:14}}><Text testID="reader-page-number" style={{color:ink,opacity:.6,fontSize:14}}>{pageNumber+1}{showControls ? ` of ${pages.length}` : ''}</Text></Pressable>
+      <View style={{position:'absolute',right:sidePadding,flexDirection:'row',gap:8}}>
+        {showControls && Platform.OS==='web' && viewport.width>=700 && <RoundButton name={index===pages.length-1?'checkmark':'chevron-forward'} label={index===pages.length-1?'Finish book':'Next page'} color={ink} disabled={!page || action.busy} onPress={()=>step(1)}/>}
+        {showControls && <RoundButton name={menu?'close':'list-outline'} label={menu?'Close reader menu':'Open reader menu'} color={ink} onPress={()=>setMenu(value=>!value)}/>}
+      </View>
+    </View>;
+  }
+  function renderSheet(part:ReaderPage,source:Chapter,pageNumber:number,showMenu:boolean) {
+    return <View testID="reader-sheet" style={{flex:1,minHeight:0,backgroundColor:bg,paddingTop:safeTop,paddingBottom:insets.bottom}}>
+      {heading(showMenu)}
+      <Pressable testID="reader-touch-surface" accessibilityLabel="Reading page. Swipe left or right to turn pages. Tap to show or hide controls." style={{flex:1,minHeight:0,paddingHorizontal:sidePadding,paddingBottom:16,overflow:'hidden'}}
+        onPress={toggleControls}>
+        <View testID="reader-page-content">{passage(part,source)}</View>
+      </Pressable>
+      {footer(pageNumber,showMenu)}
+    </View>;
+  }
 
-  return <View style={[s.root, { backgroundColor: bg, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-    <StatusBar hidden={!menu && !panel} style={dark || settings.theme === 'quiet' ? 'light' : 'dark'} />
-    <View style={s.top}><Text numberOfLines={1} style={{ color: ink, opacity: 0.55, fontSize: 15, flex: 1, textAlign: 'center' }}>{menu ? `${remaining} ${remaining === 1 ? 'page' : 'pages'} left in chapter` : book?.title || 'Loading book…'}</Text>{menu && <RoundButton name="close" label="Exit reader" color={ink} onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main')} />}</View>
-    {(error || action.error || !book) && <View style={{ paddingHorizontal: 24 }}><Feedback error={error || action.error} busy={!book && !error} /></View>}
+  return <View onLayout={event=>{const {width,height}=event.nativeEvent.layout;setReaderSize(previous=>previous.width===width && previous.height===height ? previous : {width,height});}} style={[s.root, { backgroundColor: bg, overflow:'hidden' }]}>
+    <StatusBar hidden={!controlsVisible && !panel} style={dark || settings.theme === 'quiet' ? 'light' : 'dark'} />
+    {(error || action.error || !book) && <View style={{position:'absolute',top:safeTop+8,left:24,right:24,zIndex:5,backgroundColor:bg}}><Feedback error={error || action.error} busy={!book && !error} /></View>}
     {book && !book.available && <Text style={[s.empty, { color: ink }]}>The full text of this book is not available.</Text>}
-    {page && <ScrollView ref={readingView} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: sidePadding, paddingBottom: 24 }} showsVerticalScrollIndicator={settings.scroll}
+    {page && !settings.scroll && <ReaderPager ref={pager} background={bg} width={readerSize.width || Math.min(viewport.width,800)} layoutKey={JSON.stringify([layout,bg])} disabled={!!panel || action.busy || chapter?.text===undefined}
+      prepare={prepareTurn} onTurnStart={()=>{lastPageTurn.current=Date.now();hideControls();}} onTap={toggleControls} commit={commitPosition} onError={action.setError}>
+      {renderSheet(page,chapter,index,controlsVisible)}
+    </ReaderPager>}
+    {page && settings.scroll && <View style={{flex:1,minHeight:0,paddingTop:safeTop,paddingBottom:insets.bottom}}>{heading(controlsVisible)}<ScrollView ref={readingView} testID="reader-scroll" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: sidePadding, paddingBottom: 16 }} showsVerticalScrollIndicator
       scrollEventThrottle={100}
       onScroll={event => {
         if (!settings.scroll || restoreScroll.current) return;
@@ -244,32 +318,19 @@ function ReaderSession({ id, navigation, route }: any) {
           pendingPosition.current = null;
           void saveProgress(next).catch(e => action.setError('Position could not be saved: ' + e.message));
         }, 500);
-      }}
-      onTouchStart={event => { touchStart.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY }; }}
-      onTouchEnd={event => { const dx = event.nativeEvent.pageX - touchStart.current.x, dy = event.nativeEvent.pageY - touchStart.current.y; if (!settings.scroll && Math.abs(dx) > 70 && Math.abs(dy) < 50) step(dx < 0 ? 1 : -1); }}>
-      {(settings.scroll ? pages.filter(p=>p.chapter===chapterIndex) : [page]).map((part, i) => <Pressable key={settings.scroll ? part.offset : index} onLayout={event => {
+      }}>
+      {pages.filter(p=>p.chapter===chapterIndex).map((part, i) => <Pressable key={part.offset} onLayout={event => {
         if (!settings.scroll) return;
         const globalIndex=pages.indexOf(part);
         scrollPositions.current[globalIndex] = event.nativeEvent.layout.y;
         if (restoreScroll.current && globalIndex === scrollTarget.current) {
           readingView.current?.scrollTo({ y: event.nativeEvent.layout.y, animated: false }); restoreScroll.current = false;
         }
-      }} accessibilityRole="button" accessibilityLabel="Show reading controls" onPress={() => setMenu(value => !value)} style={settings.scroll ? { marginBottom: 24 } : undefined}>
-        {part.offset === 0 && <Text style={[textStyle, { fontSize: settings.fontSize + 5, marginBottom: 22, fontWeight: '600' }]}>{chapters[part.chapter].title}</Text>}
-        {chapters[part.chapter].text===undefined?<Feedback busy/>:<RichPassage chapter={chapters[part.chapter]} page={part} textStyle={textStyle} highlight={highlight} onLink={target=>action.run(async()=>{
-          const [chapterId,anchorId]=target.slice(1).split(':');const targetIndex=chapters.findIndex(c=>c.id===chapterId);
-          if(targetIndex<0){setNotice('This reference is not available in this edition.');return;}
-          const loaded=await loadChapter(targetIndex);const anchor=loaded?.blocks?.find((b:any)=>b.type==='anchor'&&b.id===anchorId);
-          await jump({chapter:targetIndex,offset:anchor?.start || 0});
-        })}/>}
+      }} accessibilityRole="button" accessibilityLabel="Show reading controls" onPress={toggleControls} style={settings.scroll ? { marginBottom: 24 } : undefined}>
+        {passage(part,chapters[part.chapter])}
       </Pressable>)}
-    </ScrollView>}
+    </ScrollView>{footer(index,controlsVisible)}</View>}
     {Platform.OS === 'web' && <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: (1 - settings.brightness) * 0.5 }]} />}
-    <View style={s.footer}>
-      <RoundButton name="chevron-back" label="Previous page" color={ink} disabled={!page || index === 0 || action.busy} onPress={() => step(-1)} />
-      <Pressable accessibilityRole="button" accessibilityLabel="Open reader menu" onPress={() => setMenu(value => !value)} style={{ padding: 14 }}><Text style={{ color: ink, opacity: 0.6, fontSize: 15 }}>{page ? `${index + 1}${menu ? ` of ${pages.length}` : ''}` : '—'}</Text></Pressable>
-      <RoundButton name={index === pages.length - 1 ? 'checkmark' : 'chevron-forward'} label={index === pages.length - 1 ? 'Finish book' : 'Next page'} color={ink} disabled={!page || action.busy} onPress={() => step(1)} />
-    </View>
     {page && <ReaderToolbar visible={menu && !panel} dark={dark || settings.theme === 'quiet'} bottom={insets.bottom + 76} notice={notice}
       primary={[
         { label: `Contents · ${percent}%`, title: `Contents · ${percent}%`, icon: 'list-outline', selected: true, onPress: () => { setContentsTab('chapters'); setPanel('contents'); } },

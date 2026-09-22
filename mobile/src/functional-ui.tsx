@@ -25,7 +25,7 @@ export function useAction() {
 export function Feedback({ error, busy, message }: any) {
   return (
     <View accessibilityLiveRegion="polite" style={{ marginVertical: 12 }}>
-      {busy && <ActivityIndicator color="#6952FF" />}
+      {busy && <ActivityIndicator color="#3A322A" />}
       {!!error && <Txt color="#C03845">{error}</Txt>}
       {!!message && <Txt color="#25805E">{message}</Txt>}
     </View>

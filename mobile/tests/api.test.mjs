@@ -198,15 +198,20 @@ test("Neon-backed account, library, reading, collection and social workflows", a
             name: `QA ${nonce} Alice`,
             goal: 30,
             dark: true,
+            avatar_preset: 12,
             reader_settings: { fontSize: 22, theme: "dark" },
           },
         });
+        const profile = await request("/me", { token: a.token });
+        assert.equal(profile.user.avatar_preset, 12);
+        assert.equal(profile.user.avatar_url, null);
         await request("/me", {
           token: a.token,
           method: "PATCH",
           body: { goal: 0 },
           status: 400,
         });
+        await request("/me", { token: a.token, method: "PATCH", body: { avatar_preset: 22 }, status: 400 });
         await request("/books/reading-guide/review", {
           token: a.token,
           method: "PUT",

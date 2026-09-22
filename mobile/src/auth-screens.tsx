@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { art } from "./assets";
-import { purple } from "./data";
+import { accent } from "./data";
 import {
   Button,
   Field,
@@ -35,11 +35,11 @@ export function Splash({ navigation }: any) {
     <Page scroll={false}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <FloatArt name="logo" size={155} />
-        <Txt bold color={purple} size={36}>
+        <Txt bold color={accent} size={36}>
           iBook
         </Txt>
       </View>
-      <Txt color={purple} style={{ textAlign: "center" }}>
+      <Txt color={accent} style={{ textAlign: "center" }}>
         Where every page is an adventure
       </Txt>
       <Txt size={12} style={{ textAlign: "center", marginTop: 9 }}>
@@ -71,7 +71,7 @@ export function Onboarding({ navigation }: any) {
               width: Math.min((width - 72) / 3, 245),
               height: 4,
               borderRadius: 4,
-              backgroundColor: i <= step ? purple : t.line,
+              backgroundColor: i <= step ? accent : t.line,
             }}
           />
         ))}
@@ -116,7 +116,7 @@ export function Onboarding({ navigation }: any) {
         onPress={() => navigation.replace("Main")}
         style={{ paddingTop: 18, alignItems: "center" }}
       >
-        <Txt color={purple} size={12}>
+        <Txt color={accent} size={12}>
           Explore the app
         </Txt>
       </Tap>

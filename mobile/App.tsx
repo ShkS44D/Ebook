@@ -32,7 +32,7 @@ import {
   ThemeContext,
   Txt,
 } from "./src/ui";
-import { purple } from "./src/data";
+import { accent } from "./src/data";
 import { Home, Library, Store, Search, Category } from "./src/main-screens";
 import { CatalogBookScreen } from './src/catalog-screen';
 import { BookImportsScreen } from './src/book-imports-screen';
@@ -195,7 +195,7 @@ function AppContent() {
   if (!store.ready || (!fontsLoaded && !fontError))
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color={purple} />
+        <ActivityIndicator color={accent} />
       </View>
     );
   return (

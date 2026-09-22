@@ -32,6 +32,8 @@ type User = {
   name: string;
   bio: string;
   phone: string;
+  avatar_url?: string | null;
+  avatar_preset: number;
   goal: number;
   dark: boolean;
   notifications: boolean;
@@ -55,9 +57,27 @@ const empty: State = {
   notifications: [],
 };
 let nativeToken: string | null = null;
-export const apiBase =
-  process.env.EXPO_PUBLIC_API_URL ||
-  (Platform.OS === "web" && typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
+function resolveApiBase(): string {
+  const configured = process.env.EXPO_PUBLIC_API_URL;
+  if (Platform.OS !== "web" || typeof window === "undefined")
+    return configured || "http://localhost:3001";
+  if (!configured) return window.location.origin;
+  try {
+    const u = new URL(configured);
+    const here = window.location;
+    // Same host as the page: use it exactly (covers production and
+    // localhost dev). Different host (e.g. API on a LAN IP while browsing
+    // via localhost): call the API on the page's own host instead so the
+    // SameSite=Lax session cookie still applies — cross-site fetches
+    // would silently drop it and every authed call would 401.
+    if (u.hostname === here.hostname) return configured;
+    return `${here.protocol}//${here.hostname}:${u.port || (u.protocol === "https:" ? "443" : "80")}`;
+  } catch {
+    return configured;
+  }
+}
+export const apiBase = resolveApiBase();
+export const mediaUrl = (value?: string | null) => value ? (value.startsWith('/') ? `${apiBase}/api${value}` : value) : undefined;
 export async function api(
   path: string,
   method = "GET",

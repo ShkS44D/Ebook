@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { Platform, Share, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { api, useStore } from "./store";
+import { api, mediaUrl, useStore } from "./store";
 import { Empty, Feedback, RequireAccount, useAction } from "./functional-ui";
-import { Button, Card, Field, Header, Page, Row, Section, Txt } from "./ui";
+import { Avatar, Button, Card, Field, Header, Page, Row, Section, Txt } from "./ui";
 export function Friends({ navigation }: any) {
   const store = useStore(),
     action = useAction();
@@ -26,9 +26,7 @@ export function Friends({ navigation }: any) {
         )}
         {store.friends.map((f) => (
           <Card key={f.id} style={{ marginTop: 16 }}>
-            <Txt bold size={18}>
-              {f.name}
-            </Txt>
+            <View style={{flexDirection:'row',alignItems:'center',gap:12}}><Avatar size={48} index={f.avatar_preset || 0} source={f.avatar_url?{uri:mediaUrl(f.avatar_url)}:undefined}/><Txt bold size={18}>{f.name}</Txt></View>
             <Txt style={{ marginVertical: 12 }}>
               {f.accepted
                 ? f.bio || "Your reading friend"
@@ -108,7 +106,7 @@ export function Discover({ navigation }: any) {
           const f = store.friends.find((f) => f.id === p.id);
           return (
             <Card key={p.id} style={{ marginTop: 16 }}>
-              <Txt bold>{p.name}</Txt>
+              <View style={{flexDirection:'row',alignItems:'center',gap:12}}><Avatar size={48} index={p.avatar_preset || 0} source={p.avatar_url?{uri:mediaUrl(p.avatar_url)}:undefined}/><Txt bold>{p.name}</Txt></View>
               <Txt style={{ marginVertical: 12 }}>{p.bio}</Txt>
               <Button
                 title={
@@ -220,18 +218,18 @@ export function Chat({ navigation, route }: any) {
               alignSelf:
                 m.sender === store.user?.id ? "flex-end" : "flex-start",
               backgroundColor:
-                m.sender === store.user?.id ? "#6952FF" : "#EEEAF7",
+                m.sender === store.user?.id ? "#3A322A" : "#EFECE4",
               borderRadius: 18,
               padding: 16,
               marginVertical: 6,
               maxWidth: "85%",
             }}
           >
-            <Txt color={m.sender === store.user?.id ? "white" : "#302B42"}>
+            <Txt color={m.sender === store.user?.id ? "white" : "#3A322A"}>
               {m.body}
             </Txt>
             <Txt
-              color={m.sender === store.user?.id ? "#DED7FF" : "#655E77"}
+              color={m.sender === store.user?.id ? "#E8E2D4" : "#8A8273"}
               size={10}
             >
               {new Date(m.created_at).toLocaleTimeString([], {
