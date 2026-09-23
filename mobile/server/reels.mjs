@@ -7,9 +7,8 @@ import {
   createHash,
   timingSafeEqual,
 } from "node:crypto";
-import { mkdir, open, unlink, writeFile, readFile } from "node:fs/promises";
-import { head, put, del } from '@vercel/blob';
-import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client';
+import { mkdir, open, unlink, readFile } from "node:fs/promises";
+import { del } from '@vercel/blob';
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -24,9 +23,46 @@ const mediaRoot = path.resolve(process.env.MEDIA_DIR || (process.env.VERCEL ? '/
 await mkdir(mediaRoot, { recursive: true });
 const uuid = z.string().uuid();
 const reviewSecret = process.env.REEL_REVIEW_SECRET || randomBytes(32);
-const cloudStorage = !!process.env.BLOB_READ_WRITE_TOKEN;
+const cloudinary = {
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  apiKey: process.env.CLOUDINARY_API_KEY,
+  apiSecret: process.env.CLOUDINARY_API_SECRET,
+};
+const cloudStorage = Object.values(cloudinary).every(Boolean);
+const cloudinarySign = params => createHash('sha1')
+  .update(Object.entries(params).filter(([, value]) => value !== undefined && value !== '')
+    .sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join('&') + cloudinary.apiSecret)
+  .digest('hex');
+const isCloudinaryUrl = value => /^https:\/\/res\.cloudinary\.com\//.test(value);
+const cloudinaryPublicId = value => {
+  try {
+    const match = new URL(value).pathname.match(/\/video\/upload\/(?:v\d+\/)?(.+)\.[a-z0-9]+$/i);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch { return null; }
+};
+async function cloudinaryRequest(endpoint, options = {}) {
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinary.cloudName}${endpoint}`, {
+    ...options,
+    headers: { Authorization: `Basic ${Buffer.from(`${cloudinary.apiKey}:${cloudinary.apiSecret}`).toString('base64')}`, ...options.headers },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    fail(response.status === 404 ? 404 : 502, detail.error?.message || 'Cloudinary could not verify the video.');
+  }
+  return response.json();
+}
+async function removeCloudinary(publicId) {
+  const timestamp = Math.floor(Date.now() / 1000), signature = cloudinarySign({ public_id: publicId, timestamp });
+  const body = new URLSearchParams({ public_id: publicId, timestamp: String(timestamp), api_key: cloudinary.apiKey, signature });
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinary.cloudName}/video/destroy`, { method: 'POST', body, signal: AbortSignal.timeout(20000) });
+  if (!response.ok) throw new Error('Cloudinary video deletion failed.');
+}
 async function removeMedia(filename) {
-  if (filename.startsWith('https://')) await del(filename);
+  if (isCloudinaryUrl(filename) && cloudStorage) {
+    const publicId = cloudinaryPublicId(filename);
+    if (publicId) await removeCloudinary(publicId);
+  } else if (filename.startsWith('https://')) await del(filename);
   else await unlink(path.join(mediaRoot, filename)).catch(() => {});
 }
 function sendStoredMedia(req, res, media) {
@@ -242,34 +278,46 @@ const upload = multer({
       ["video/mp4", "video/webm", "video/quicktime"].includes(file.mimetype),
     ),
 });
-reelsRouter.get('/reel-upload-config', (_req, res) => res.json({ direct: cloudStorage }));
+reelsRouter.get('/reel-upload-config', (_req, res) => res.json({ direct: cloudStorage, provider: cloudStorage ? 'cloudinary' : 'local' }));
 reelsRouter.post('/reel-upload-token', publishLimit, async (req, res) => {
   if (!isReelAdmin(req.user.id) || !featureFlags.editorialUploads) fail(403, 'Reel administrator access required.');
   if (!cloudStorage) fail(503, 'Cloud uploads are not configured.');
   const expired = await query('DELETE FROM ibook.reel_upload_intents WHERE owner_id=$1 AND expires_at<now() RETURNING pathname', [req.user.id]);
-  await Promise.all(expired.map(intent => del(intent.pathname).catch(() => {})));
+  await Promise.all(expired.map(intent => removeCloudinary(intent.pathname).catch(() => {})));
   const [{ count }] = await query('SELECT ((SELECT count(*) FROM ibook.reel_media WHERE owner_id=$1) + (SELECT count(*) FROM ibook.reel_upload_intents WHERE owner_id=$1 AND expires_at>now()))::int count', [req.user.id]);
   if (count >= 50) fail(400, 'Your upload quota has been reached. Remove a video or try later.');
-  const id = randomUUID(), pathname = `reels/${req.user.id}/${id}.video`;
+  const id = randomUUID(), pathname = `ibook/reels/${req.user.id}/${id}`;
   await query("INSERT INTO ibook.reel_upload_intents(id,owner_id,pathname,expires_at) VALUES($1,$2,$3,now()+interval '20 minutes')", [id, req.user.id, pathname]);
-  const token = await generateClientTokenFromReadWriteToken({ pathname, allowedContentTypes: ['video/mp4', 'video/webm', 'video/quicktime'], maximumSizeInBytes: 50 * 1024 * 1024, validUntil: Date.now() + 15 * 60 * 1000, addRandomSuffix: false, allowOverwrite: false });
-  res.json({ id, pathname, token });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const params = { public_id: pathname, timestamp, overwrite: 'false' };
+  res.json({ id, uploadUrl: `https://api.cloudinary.com/v1_1/${cloudinary.cloudName}/video/upload`, fields: { ...params, api_key: cloudinary.apiKey, signature: cloudinarySign(params) } });
 });
-reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res, next) => {
+reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res) => {
   const id = uuid.parse(req.body.id);
   const [intent] = await query('SELECT * FROM ibook.reel_upload_intents WHERE id=$1 AND owner_id=$2 AND expires_at>now()', [id, req.user.id]);
   if (!intent) fail(404, 'Upload expired. Please choose your video again.');
-  const blob = await head(intent.pathname);
-  const [existing] = await query('SELECT id,duration_seconds FROM ibook.reel_media WHERE filename=$1 AND owner_id=$2', [blob.url, req.user.id]);
-  if (existing) return res.status(201).json({ id: existing.id, durationSeconds: existing.duration_seconds });
-  if (blob.size > 50 * 1024 * 1024) fail(400, 'Video must be smaller than 50 MB.');
-  const response = await fetch(blob.url, { signal: AbortSignal.timeout(20000) });
-  if (!response.ok) fail(400, 'Upload could not be retrieved. Try again.');
-  const filename = randomUUID() + '.video', filepath = path.join(mediaRoot, filename);
-  await writeFile(filepath, Buffer.from(await response.arrayBuffer()));
-  req.file = { path: filepath, filename, size: blob.size, cloudUrl: blob.url };
-  await completeUpload(req, res, next);
+  const asset = await cloudinaryRequest(`/resources/video/upload/${encodeURIComponent(intent.pathname)}`);
+  const [existing] = await query('SELECT id,duration_seconds FROM ibook.reel_media WHERE filename=$1 AND owner_id=$2', [asset.secure_url, req.user.id]);
+  if (existing) {
+    await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
+    return res.status(201).json({ id: existing.id, durationSeconds: existing.duration_seconds });
+  }
+  const invalid = asset.bytes > 50 * 1024 * 1024
+    ? 'Video must be smaller than 50 MB.'
+    : !Number.isFinite(asset.duration) || asset.duration < 1 || asset.duration > 90
+      ? 'Use a 1–90 second video.'
+      : asset.resource_type !== 'video' || !['mp4','webm','mov'].includes(String(asset.format).toLowerCase())
+        ? 'Choose an MP4, WebM, or QuickTime video.'
+        : null;
+  if (invalid) {
+    await removeCloudinary(intent.pathname).catch(() => {});
+    await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
+    fail(400, invalid);
+  }
+  const mediaId = randomUUID(), mime = asset.format === 'webm' ? 'video/webm' : asset.format === 'mov' ? 'video/quicktime' : 'video/mp4';
+  await query("INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds,data) VALUES($1,$2,$3,$4,$5,$6,NULL)", [mediaId, req.user.id, asset.secure_url, mime, asset.bytes, asset.duration]);
   await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
+  res.status(201).json({ id: mediaId, durationSeconds: asset.duration });
 });
 reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
   if (!isReelAdmin(req.user.id) || !featureFlags.editorialUploads) fail(403, 'Reel administrator access required.');
@@ -353,12 +401,7 @@ async function completeUpload(req, res, next, error) {
         : "video/mp4";
       const id = randomUUID();
       let filename = req.file.cloudUrl || req.file.filename;
-      if (cloudStorage && !req.file.cloudUrl) {
-        const blob = await put(`reels/${req.user.id}/${id}.video`, await readFile(req.file.path), { access: 'public', contentType: mime, addRandomSuffix: false });
-        filename = blob.url;
-        req.file.cloudUrl = blob.url;
-      }
-      const storedBytes = cloudStorage ? null : await readFile(req.file.path);
+      const storedBytes = await readFile(req.file.path);
       await query(
         "INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds,data) VALUES($1,$2,$3,$4,$5,$6,$7)",
         [id, req.user.id, filename, mime, req.file.size, duration, storedBytes],
@@ -367,7 +410,6 @@ async function completeUpload(req, res, next, error) {
       res.status(201).json({ id, durationSeconds: duration });
     } catch (error) {
       await unlink(req.file.path).catch(() => {});
-      if (req.file.cloudUrl) await del(req.file.cloudUrl).catch(() => {});
       next(
         Object.assign(
           new Error(

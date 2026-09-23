@@ -795,12 +795,17 @@ export function AddReel({ navigation, route }: any) {
       } as any);
     const config = await api('/reel-upload-config');
     let data;
-    if (config.direct) {
+    if (config.provider === 'cloudinary') {
       const signed = await api('/reel-upload-token', 'POST', {});
-      const { put } = await import('@vercel/blob/client');
-      await put(signed.pathname, Platform.OS === 'web' && file.file ? file.file : new File(file.uri), {
-        access: 'public', token: signed.token, contentType: file.mimeType || 'video/mp4', multipart: true,
-      });
+      const cloudForm = new FormData();
+      if (Platform.OS === 'web' && file.file) cloudForm.append('file', file.file);
+      else cloudForm.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'video/mp4' } as any);
+      Object.entries(signed.fields).forEach(([key, value]) => cloudForm.append(key, String(value)));
+      const response = await fetch(signed.uploadUrl, { method: 'POST', body: cloudForm });
+      if (!response.ok) {
+        const problem = await response.json().catch(() => ({}));
+        throw new Error(problem.error?.message || 'Cloudinary could not upload this video.');
+      }
       data = await api('/reel-upload-complete', 'POST', { id: signed.id });
     } else data = await api("/reel-upload", "POST", form);
     if (!mounted.current) {
