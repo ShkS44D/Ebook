@@ -293,10 +293,23 @@ reelsRouter.post('/reel-upload-token', publishLimit, async (req, res) => {
   res.json({ id, uploadUrl: `https://api.cloudinary.com/v1_1/${cloudinary.cloudName}/video/upload`, fields: { ...params, api_key: cloudinary.apiKey, signature: cloudinarySign(params) } });
 });
 reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res) => {
-  const id = uuid.parse(req.body.id);
+  const input = z.object({
+    id: uuid,
+    upload: z.object({
+      publicId: z.string().min(1).max(500),
+      version: z.number().int().positive(),
+      signature: z.string().regex(/^[a-f0-9]{40}$/),
+      duration: z.number().positive(),
+    }).strict(),
+  }).strict().parse(req.body);
+  const id = input.id;
   const [intent] = await query('SELECT * FROM ibook.reel_upload_intents WHERE id=$1 AND owner_id=$2 AND expires_at>now()', [id, req.user.id]);
   if (!intent) fail(404, 'Upload expired. Please choose your video again.');
+  if (input.upload.publicId !== intent.pathname) fail(403, 'The uploaded video does not match this upload session.');
+  const expectedSignature = createHash('sha1').update(`public_id=${input.upload.publicId}&version=${input.upload.version}${cloudinary.apiSecret}`).digest('hex');
+  if (!timingSafeEqual(Buffer.from(input.upload.signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) fail(403, 'Cloudinary could not verify this upload.');
   const asset = await cloudinaryRequest(`/resources/video/upload/${encodeURIComponent(intent.pathname)}`);
+  const duration = input.upload.duration;
   const [existing] = await query('SELECT id,duration_seconds FROM ibook.reel_media WHERE filename=$1 AND owner_id=$2', [asset.secure_url, req.user.id]);
   if (existing) {
     await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
@@ -304,7 +317,7 @@ reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res) => {
   }
   const invalid = asset.bytes > 50 * 1024 * 1024
     ? 'Video must be smaller than 50 MB.'
-    : !Number.isFinite(asset.duration) || asset.duration < 1 || asset.duration > 90
+    : !Number.isFinite(duration) || duration < 1 || duration > 90
       ? 'Use a 1–90 second video.'
       : asset.resource_type !== 'video' || !['mp4','webm','mov'].includes(String(asset.format).toLowerCase())
         ? 'Choose an MP4, WebM, or QuickTime video.'
@@ -315,9 +328,9 @@ reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res) => {
     fail(400, invalid);
   }
   const mediaId = randomUUID(), mime = asset.format === 'webm' ? 'video/webm' : asset.format === 'mov' ? 'video/quicktime' : 'video/mp4';
-  await query("INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds,data) VALUES($1,$2,$3,$4,$5,$6,NULL)", [mediaId, req.user.id, asset.secure_url, mime, asset.bytes, asset.duration]);
+  await query("INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds,data) VALUES($1,$2,$3,$4,$5,$6,NULL)", [mediaId, req.user.id, asset.secure_url, mime, asset.bytes, duration]);
   await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
-  res.status(201).json({ id: mediaId, durationSeconds: asset.duration });
+  res.status(201).json({ id: mediaId, durationSeconds: duration });
 });
 reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
   if (!isReelAdmin(req.user.id) || !featureFlags.editorialUploads) fail(403, 'Reel administrator access required.');
