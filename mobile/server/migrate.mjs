@@ -72,26 +72,10 @@ export async function migrate() {
       JSON.stringify(chapters),
     ],
   );
-  const seeds = JSON.parse(
-    await readFile(new URL("./reel-seeds.json", import.meta.url), "utf8"),
-  );
-  for (const r of seeds)
-    await query(
-      "INSERT INTO ibook.reels(id,book_id,page,title,caption,tags,video_url,source_url,attribution,license,duration_seconds) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(id) DO NOTHING",
-      [
-        r.id,
-        "reading-guide",
-        r.page,
-        r.title,
-        r.caption,
-        r.tags,
-        r.videoUrl,
-        r.sourceUrl,
-        r.attribution,
-        "Pexels License — https://www.pexels.com/license/",
-        r.duration,
-      ],
-    );
+  // The reel catalogue intentionally starts empty. Administrators publish
+  // reviewed passage reels from the app; no demo footage is inserted.
+  const seeds = JSON.parse(await readFile(new URL("./reel-seeds.json", import.meta.url), "utf8"));
+  await query("DELETE FROM ibook.reels WHERE id=ANY($1::uuid[]) AND creator_id IS NULL", [seeds.map((r) => r.id)]);
 }
 if (process.argv[1]?.endsWith("migrate.mjs")) {
   try {

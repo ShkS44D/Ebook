@@ -101,6 +101,7 @@ const publicUser = (u) => {
       .split(",")
       .map((id) => id.trim())
       .includes(u.id),
+    reel_admin: isBookAdmin(u.id) || (process.env.REEL_MODERATOR_IDS || "").split(",").map((id) => id.trim()).includes(u.id),
   };
 };
 async function passwordHash(password) {

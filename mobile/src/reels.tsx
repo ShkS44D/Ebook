@@ -31,6 +31,11 @@ type Reel = {
   id: string;
   book_id: string;
   page: number;
+  chapter_id?: string;
+  start_offset?: number;
+  end_offset?: number;
+  reel_scope?: 'passage' | 'chapter' | 'book';
+  status?: string;
   book_title: string;
   title: string;
   caption: string;
@@ -54,10 +59,10 @@ const wrap = {
   flexWrap: "wrap" as const,
   gap: 8,
 };
-const pagePath = (bookId: string, page: number) =>
-  `/page-reels/${encodeURIComponent(bookId)}/${page}`;
+const pagePath = (bookId: string, page: number, startOffset = 0, endOffset = startOffset) =>
+  `/page-reels/${encodeURIComponent(bookId)}/${page}?startOffset=${startOffset}&endOffset=${endOffset}`;
 
-export function PageReels({ bookId, page, navigation }: any) {
+export function PageReels({ bookId, page, startOffset = 0, endOffset = startOffset, navigation }: any) {
   const [items, setItems] = useState<Reel[]>([]),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true);
@@ -68,7 +73,7 @@ export function PageReels({ bookId, page, navigation }: any) {
       setLoading(true);
       setError("");
       setItems([]);
-      api(pagePath(bookId, page) + "?mode=page")
+      api(pagePath(bookId, page, startOffset, endOffset) + "&mode=page")
         .then((data) => {
           if (active) setItems(data.items);
         })
@@ -81,12 +86,12 @@ export function PageReels({ bookId, page, navigation }: any) {
       return () => {
         active = false;
       };
-    }, [bookId, page, reload]),
+    }, [bookId, page, startOffset, endOffset, reload]),
   );
   return (
     <Section title="See this page come alive">
       <Txt style={{ marginBottom: 14 }}>
-        Watch a new perspective. Share your own.
+        Watch a perspective connected to this passage.
       </Txt>
       <Feedback error={error} busy={loading} />
       {error && (
@@ -106,7 +111,7 @@ export function PageReels({ bookId, page, navigation }: any) {
             key={r.id}
             label={"Watch " + r.title}
             onPress={() =>
-              navigation.navigate("Reels", { bookId, page, startId: r.id })
+              navigation.navigate("Reels", { bookId, page, startOffset, endOffset, startId: r.id })
             }
           >
             <LinearGradient
@@ -141,27 +146,19 @@ export function PageReels({ bookId, page, navigation }: any) {
                   {r.external_url
                     ? "External reel"
                     : `${Math.round(r.duration_seconds)} sec`}{" "}
-                  · {r.creator_id ? "Community" : "Starter clip"}
+                  · {r.creator_id ? "Editorial" : "iBook"}
                 </Txt>
               </View>
             </LinearGradient>
           </Tap>
         ))}
       </ScrollView>
-      {!loading && !error && !items.length && (
-        <Empty text="Be the first to bring this page to life with a reel." />
-      )}
+      {!loading && !error && !items.length && <Empty text="No published reel is attached to this passage yet." />}
       <View style={{ ...gap, marginBottom: 24 }}>
         <Button
           title="Explore page reels"
           icon="play-circle-outline"
-          onPress={() => navigation.navigate("Reels", { bookId, page })}
-        />
-        <Button
-          title="Create a reel for this page"
-          secondary
-          icon="add"
-          onPress={() => navigation.navigate("AddReel", { bookId, page })}
+          onPress={() => navigation.navigate("Reels", { bookId, page, startOffset, endOffset })}
         />
       </View>
     </Section>
@@ -344,7 +341,7 @@ function ReelContent({
     const url = base
       ? `${base.replace(/\/$/, "")}/reels/${reel.id}`
       : `ibook://reels/${reel.id}`;
-    const text = `${reel.title} — ${reel.book_title}, page ${reel.page + 1}`;
+    const text = `${reel.title} — ${reel.book_title}`;
     if (Platform.OS === "web") {
       if (navigator.share && !copyOnly)
         await navigator.share({ title: reel.title, text, url });
@@ -424,14 +421,6 @@ function ReelContent({
             onPress={() => action.run(() => share(true))}
           />
         )}
-        <Button
-          title="Comments"
-          secondary
-          icon="chatbubble-outline"
-          onPress={() =>
-            navigation.navigate("ReelComments", { reelId: reel.id })
-          }
-        />
         <Button title="More" secondary onPress={() => setOptions(!options)} />
       </View>
       {options && (
@@ -522,13 +511,14 @@ function ReelContent({
         </Card>
       )}
       <Button
-        title={`Read the linked page · ${reel.page + 1}`}
+        title="Read the linked passage"
         secondary
         style={{ marginTop: 20 }}
         onPress={() =>
           navigation.navigate("Reader", {
             bookId: reel.book_id,
             page: reel.page,
+            offset: reel.start_offset || 0,
           })
         }
       />
@@ -538,7 +528,9 @@ function ReelContent({
 
 export function ReelsScreen({ navigation, route }: any) {
   const bookId = route.params?.bookId || "reading-guide",
-    page = Number(route.params?.page || 0);
+    page = Number(route.params?.page || 0),
+    startOffset = Number(route.params?.startOffset || 0),
+    endOffset = Number(route.params?.endOffset || startOffset);
   const [mode, setMode] = useState("for-you"),
     [items, setItems] = useState<Reel[]>([]),
     [index, setIndex] = useState(0),
@@ -557,7 +549,7 @@ export function ReelsScreen({ navigation, route }: any) {
       const sequence = ++loadSequence.current;
       setLoading(true);
       setLoadError("");
-      api(pagePath(bookId, page) + "?mode=" + mode)
+      api(pagePath(bookId, page, startOffset, endOffset) + "&mode=" + mode)
         .then((data) => {
           if (sequence !== loadSequence.current) return;
           setItems(data.items);
@@ -579,7 +571,7 @@ export function ReelsScreen({ navigation, route }: any) {
       return () => {
         loadSequence.current++;
       };
-    }, [bookId, page, mode, reload]),
+    }, [bookId, page, startOffset, endOffset, mode, reload]),
   );
   async function next() {
     if (index < items.length - 1) {
@@ -588,8 +580,8 @@ export function ReelsScreen({ navigation, route }: any) {
     }
     if (!hasMore || items.length >= 100) return;
     const data = await api(
-      pagePath(bookId, page) +
-        `?mode=${mode}&exclude=${items.map((r) => r.id).join(",")}`,
+      pagePath(bookId, page, startOffset, endOffset) +
+        `&mode=${mode}&exclude=${items.map((r) => r.id).join(",")}`,
     );
     const fresh = data.items
       .filter((r: Reel) => !items.some((x) => x.id === r.id))
@@ -670,11 +662,6 @@ export function ReelsScreen({ navigation, route }: any) {
             onPress={() => action.run(next)}
           />
         </View>
-        <Button
-          title="Create a reel for this page"
-          secondary
-          onPress={() => navigation.navigate("AddReel", { bookId, page })}
-        />
         <Section title="Made for this page">
           <Txt size={12}>
             Recommendations use page content, watch time, likes, saves and
@@ -756,14 +743,20 @@ export function ReelScreen({ navigation, route }: any) {
 }
 
 export function AddReel({ navigation, route }: any) {
-  const action = useAction();
+  const action = useAction(), { user } = useStore();
   const bookId = route.params?.bookId || "reading-guide",
-    page = Number(route.params?.page || 0);
+    page = Number(route.params?.page || 0),
+    chapterId = route.params?.chapterId,
+    startOffset = Number(route.params?.startOffset || 0),
+    endOffset = Number(route.params?.endOffset || startOffset),
+    passagePreview = String(route.params?.passagePreview || '');
   const [title, setTitle] = useState(""),
     [caption, setCaption] = useState(""),
     [tags, setTags] = useState(""),
     [externalUrl, setExternalUrl] = useState(""),
     [mode, setMode] = useState("upload"),
+    [scope, setScope] = useState<'passage'|'chapter'|'book'>('passage'),
+    [spoilerLevel, setSpoilerLevel] = useState<'none'|'through_current_passage'|'chapter_spoiler'|'book_spoiler'>('through_current_passage'),
     [rights, setRights] = useState(false),
     [media, setMedia] = useState<{ id: string; name: string } | null>(null),
     [pageTitle, setPageTitle] = useState("");
@@ -825,6 +818,11 @@ export function AddReel({ navigation, route }: any) {
     const data = await api("/reels", "POST", {
       bookId,
       page,
+      chapterId,
+      startOffset,
+      endOffset,
+      scope,
+      spoilerLevel,
       title,
       caption,
       tags: tags
@@ -836,17 +834,28 @@ export function AddReel({ navigation, route }: any) {
         : { externalUrl: externalUrl.trim() }),
       rightsConfirmed: rights,
     });
+    await api(`/admin/reels/${data.id}/publish`, 'POST', {});
     if (mode === "upload") uploadId.current = null;
     navigation.replace("Reel", { reelId: data.id });
   }
   return (
     <RequireAccount navigation={navigation}>
       <Page>
-        <Header navigation={navigation} title="Bring this page to life" />
+        <Header navigation={navigation} title="Publish a passage reel" />
+        {!user?.reel_admin ? <Empty text="This area is available to reel administrators." /> : <>
         <Txt style={{ marginBottom: 20 }}>
           Page {page + 1}
           {pageTitle ? ` · ${pageTitle}` : ""}
         </Txt>
+        {!!passagePreview && <Card style={{marginBottom:18}}><Txt size={12} color="#8A8273">SELECTED PASSAGE</Txt><Txt numberOfLines={4} style={{marginTop:8,lineHeight:22}}>{passagePreview}</Txt></Card>}
+        <Txt bold>Where should this reel appear?</Txt>
+        <View style={{...wrap,marginVertical:12}}>
+          {([['passage','This passage'],['chapter','This chapter'],['book','Whole book']] as const).map(([value,label])=><Button key={value} title={label} secondary={scope!==value} onPress={()=>setScope(value)}/>)}
+        </View>
+        <Txt bold>Spoiler label</Txt>
+        <View style={{...wrap,marginVertical:12}}>
+          {([['none','No spoilers'],['through_current_passage','Through this passage'],['chapter_spoiler','Chapter spoiler'],['book_spoiler','Book spoiler']] as const).map(([value,label])=><Button key={value} title={label} secondary={spoilerLevel!==value} onPress={()=>setSpoilerLevel(value)}/>)}
+        </View>
         <View style={{ ...wrap, marginBottom: 20 }}>
           <Button
             title="Upload a clip"
@@ -917,12 +926,11 @@ export function AddReel({ navigation, route }: any) {
           onPress={() => setRights(!rights)}
         />
         <Txt size={12} style={{ marginTop: 14 }}>
-          Your reel and comments will be public. Keep it relevant to this page
-          and avoid spoilers from later pages.
+          This reel will be reviewed against the selected passage and published publicly.
         </Txt>
         <Feedback {...action} />
         <Button
-          title="Publish reel"
+          title="Publish passage reel"
           disabled={
             action.busy ||
             !rights ||
@@ -932,9 +940,32 @@ export function AddReel({ navigation, route }: any) {
           }
           onPress={() => action.run(publish)}
         />
+        </>}
       </Page>
     </RequireAccount>
   );
+}
+
+export function ReelManagement({ navigation }: any) {
+  const { user } = useStore();
+  const action = useAction();
+  const [items, setItems] = useState<Reel[]>([]);
+  const load = useCallback(async () => setItems(await api('/admin/reels')), []);
+  useFocusEffect(useCallback(() => { if (user?.reel_admin) void action.run(load); }, [user?.reel_admin]));
+  return <RequireAccount navigation={navigation}><Page><Header navigation={navigation} title="Reel management" />
+    {!user?.reel_admin ? <Empty text="This area is available to reel administrators." /> : <>
+      <Txt style={{marginBottom:16}}>Upload reels from a passage inside the reader. Drafts remain private until they are published.</Txt>
+      <Feedback {...action}/>
+      <Button title="Refresh reels" secondary disabled={action.busy} onPress={() => action.run(load)}/>
+      {!action.busy && !items.length && <Empty text="No reels yet. Open a book, show the reading controls, and choose Add passage reel."/>}
+      {items.map(reel => <Card key={reel.id} style={{marginTop:14}}>
+        <Txt bold>{reel.title}</Txt><Txt size={12}>{reel.book_title} · {reel.status} · {reel.reel_scope || 'passage'}</Txt>
+        <Txt numberOfLines={2} style={{marginVertical:10}}>{reel.caption}</Txt>
+        {reel.status === 'published' ? <Button title="Unpublish" secondary disabled={action.busy} onPress={() => action.run(async()=>{await api(`/admin/reels/${reel.id}/unpublish`,'POST',{});await load();})}/>
+          : <Button title="Publish" disabled={action.busy || reel.status !== 'ready'} onPress={() => action.run(async()=>{await api(`/admin/reels/${reel.id}/publish`,'POST',{});await load();})}/>}
+      </Card>)}
+    </>}
+  </Page></RequireAccount>;
 }
 
 export function ReelComments({ navigation, route }: any) {

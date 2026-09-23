@@ -68,6 +68,7 @@ export function Profile({ navigation }: any) {
           />
         ))}
         {store.user?.book_admin&&<Row title="Book imports" onPress={()=>navigation.navigate('BookImports')}/>}
+        {store.user?.reel_admin&&<Row title="Reel management" onPress={()=>navigation.navigate('ReelManagement')}/>}
       </Page>
     </RequireAccount>
   );
@@ -546,7 +547,7 @@ export function Info({ navigation, route }: any) {
           {name === "Gift"
             ? "Gift codes are unavailable until a payment service is connected."
             : name === "Privacy"
-              ? "iBook stores your account, saved books, collections, reading time, reviews, settings, messages and reel interactions in its PostgreSQL database. Published reels, captions and comments are public, including through shared links. Uploaded videos are stored by the service. Watch time, likes, saves and shares personalize page reels; reset watch history from the reels screen. Reports are reviewed by appointed moderators. Your display name, bio, and published reviews are visible to other readers. Your library and collections are private. Passwords are stored as salted hashes. Messages are accessible to their participants and the service operator; they are not end-to-end encrypted. No card details are collected."
+              ? "iBook stores your account, saved books, collections, reading time, reviews, settings, messages and reel interactions in its PostgreSQL database. Administrator-published reels and captions are public, including through shared links. Uploaded videos are stored by the service. Watch time, likes, saves and shares personalize passage reels. Reports are reviewed by appointed moderators. Community publishing and comments remain disabled until their moderation tools are ready. Your display name, bio, and published reviews are visible to other readers. Your library and collections are private. Passwords are stored as salted hashes. Messages are accessible to their participants and the service operator; they are not end-to-end encrypted. No card details are collected."
               : "Use the free reading guide and organize catalog titles in your library. Catalog entries do not grant access to the full copyrighted books. Publish reviews in your own words and respect other readers. Payments and paid memberships are unavailable. The service operator must publish applicable terms and contact details before a public launch."}
         </Txt>
       )}

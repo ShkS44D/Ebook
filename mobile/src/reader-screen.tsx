@@ -51,6 +51,7 @@ function ReaderSession({ id, navigation, route }: any) {
   const [contentsTab, setContentsTab] = useState<'chapters' | 'bookmarks'>('chapters');
   const [query, setQuery] = useState(''), [highlight, setHighlight] = useState('');
   const [notice, setNotice] = useState('');
+  const [reelAvailable, setReelAvailable] = useState(false);
   const [locked, setLocked] = useState(false);
   const [ambientAvailable, setAmbientAvailable] = useState(false), [ambientDark, setAmbientDark] = useState(false);
   const readingView = useRef<ScrollView>(null);
@@ -109,6 +110,19 @@ function ReaderSession({ id, navigation, route }: any) {
     setSearchBusy(true);const timer=setTimeout(()=>{void api('/books/'+encodeURIComponent(id)+'/search?q='+encodeURIComponent(query.trim())).then(rows=>{if(active)setResults(rows);}).catch(e=>{if(active)setSearchError(e.message);}).finally(()=>{if(active)setSearchBusy(false);});},300);
     return()=>{active=false;clearTimeout(timer);};},[id,query]);
   const percent = entry?.finished ? 100 : Math.round(index / Math.max(pages.length, 1) * 100);
+
+  // Availability is checked only after the page settles, never during the
+  // swipe animation. Books without published reels keep the original UI.
+  useEffect(() => {
+    if (!page || !chapter) { setReelAvailable(false); return; }
+    let active = true;
+    const timer = setTimeout(() => {
+      api(`/reel-availability/${encodeURIComponent(id)}/${chapterIndex}?startOffset=${page.offset}&endOffset=${page.end}`)
+        .then(data => { if (active) setReelAvailable(!!data.available); })
+        .catch(() => { if (active) setReelAvailable(false); });
+    }, 220);
+    return () => { active = false; clearTimeout(timer); };
+  }, [id, chapterIndex, page?.offset, page?.end, chapter?.id]);
 
   useEffect(() => {
     if (Number.isInteger(linkedChapter) && linkedChapter >= 0 && chapters.length) {
@@ -336,8 +350,9 @@ function ReaderSession({ id, navigation, route }: any) {
         { label: `Contents · ${percent}%`, title: `Contents · ${percent}%`, icon: 'list-outline', selected: true, onPress: () => { setContentsTab('chapters'); setPanel('contents'); } },
         { label: 'Search Book', title: 'Search', icon: 'search-outline', onPress: () => setPanel('search') },
         { label: 'Themes & Settings', title: 'Appearance', icon: 'text-outline', onPress: () => setPanel('themes') },
-        { label: 'Page reels', title: 'Page reels', icon: 'play-circle-outline', onPress: () => setPanel('reels') },
-      ]}
+        ...(reelAvailable ? [{ label: 'Passage reels', title: 'Reels', icon: 'play-circle-outline', onPress: () => setPanel('reels') }] : []),
+        ...(store.user?.reel_admin ? [{ label: 'Add passage reel', title: 'Add reel', icon: 'add-circle-outline', onPress: () => navigation.navigate('AddReel', { bookId:id, page:chapterIndex, chapterId:chapter?.id || String(chapterIndex), startOffset:page.offset, endOffset:page.end, passagePreview:chapter?.text?.slice(page.offset, Math.min(page.end, page.offset + 240)) || '' }) }] : []),
+      ] as any}
       actions={[
         { label: 'Share book', icon: 'share-outline', onPress: () => action.run(share) },
         { label: locked ? 'Unlock orientation' : 'Lock orientation', icon: locked ? 'lock-closed' : 'lock-open-outline', selected: locked, onPress: () => action.run(toggleLock) },
@@ -372,7 +387,7 @@ function ReaderSession({ id, navigation, route }: any) {
       </KeyboardAvoidingView>
     </ReaderSheet>
     {panel === 'themes' && <ThemePanel settings={settings} setSettings={next => { scrollTarget.current = index; setSettings(next); }} preview={page?.text || 'Make room for a little reading every day.'} onClose={saveSettings} onBrightness={changeBrightness} notice={action.error || notice} ambientAvailable={ambientAvailable} busy={action.busy} />}
-    <ReaderSheet visible={panel === 'reels'} title="Page reels" onClose={() => setPanel(null)}><ScrollView style={{ paddingHorizontal: 20 }}><PageReels bookId={id} page={chapterIndex} navigation={navigation} /></ScrollView></ReaderSheet>
+    <ReaderSheet visible={panel === 'reels'} title="Passage reels" onClose={() => setPanel(null)}><ScrollView style={{ paddingHorizontal: 20 }}><PageReels bookId={id} page={chapterIndex} startOffset={page?.offset} endOffset={page?.end} navigation={navigation} /></ScrollView></ReaderSheet>
   </View>;
 }
 const s = StyleSheet.create({

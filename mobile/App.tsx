@@ -7,6 +7,7 @@ import {
   ReelComments,
   ReelModeration,
   ModeratorReel,
+  ReelManagement,
 } from "./src/reels";
 import "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
@@ -110,6 +111,7 @@ const screens: any = {
   ReelComments,
   ReelModeration,
   ModeratorReel,
+  ReelManagement,
   Main,
 
   Splash,
@@ -171,6 +173,7 @@ const appLinks: any = {
       Reel: "reels/:reelId",
       Reels: "page-reels/:bookId/:page",
       ReelModeration: "reel-moderation",
+      ReelManagement: "reel-management",
       Book: "book/:bookId?",
       Onboarding: "onboarding",
       Profile: "profile",

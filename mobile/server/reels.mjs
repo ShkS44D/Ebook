@@ -4,6 +4,7 @@ import {
   randomUUID,
   randomBytes,
   createHmac,
+  createHash,
   timingSafeEqual,
 } from "node:crypto";
 import { mkdir, open, unlink, writeFile, readFile } from "node:fs/promises";
@@ -17,7 +18,7 @@ import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { query, transaction } from "./db.mjs";
 import { rankReels } from "./reel-ranking.mjs";
-import { getBook } from './books/service.mjs';
+import { getBook, isBookAdmin } from './books/service.mjs';
 const runFile = promisify(execFile);
 const mediaRoot = path.resolve(process.env.MEDIA_DIR || (process.env.VERCEL ? '/tmp/ibook-media' : 'media'));
 await mkdir(mediaRoot, { recursive: true });
@@ -28,6 +29,27 @@ async function removeMedia(filename) {
   if (filename.startsWith('https://')) await del(filename);
   else await unlink(path.join(mediaRoot, filename)).catch(() => {});
 }
+function sendStoredMedia(req, res, media) {
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
+  res.type(media.mime);
+  if (!media.data) {
+    if (media.filename.startsWith('https://')) return res.redirect(307, media.filename);
+    return res.sendFile(media.filename, { root: mediaRoot, dotfiles: "deny" }, error => {
+      if (error && !res.headersSent) res.status(404).json({ error: "Video file unavailable." });
+    });
+  }
+  const bytes = Buffer.from(media.data);
+  const match = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range || '');
+  if (!match) {
+    res.set({ 'Accept-Ranges': 'bytes', 'Content-Length': String(bytes.length) });
+    return res.send(bytes);
+  }
+  const start = Number(match[1]);
+  const end = Math.min(bytes.length - 1, match[2] ? Number(match[2]) : bytes.length - 1);
+  if (start > end || start >= bytes.length) return res.status(416).set('Content-Range', `bytes */${bytes.length}`).end();
+  res.status(206).set({ 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${start}-${end}/${bytes.length}`, 'Content-Length': String(end - start + 1) });
+  return res.send(bytes.subarray(start, end + 1));
+}
 const signReview = (id, expires) =>
   createHmac("sha256", reviewSecret)
     .update(id + ":" + expires)
@@ -37,6 +59,13 @@ const isModerator = (id) =>
     .split(",")
     .map((x) => x.trim())
     .includes(id);
+const isReelAdmin = (id) => isBookAdmin(id) || isModerator(id);
+const featureFlags = {
+  viewing: process.env.REELS_VIEWING_ENABLED !== 'false',
+  editorialUploads: process.env.EDITORIAL_REEL_UPLOADS_ENABLED !== 'false',
+  communityUploads: process.env.COMMUNITY_REEL_UPLOADS_ENABLED === 'true',
+  comments: process.env.REEL_COMMENTS_ENABLED === 'true',
+};
 const fail = (status, message) => {
   throw Object.assign(new Error(message), { status });
 };
@@ -102,13 +131,7 @@ export function registerPublicReels(app) {
       fail(403, "Review link expired. Reopen the report.");
     const [m] = await query("SELECT * FROM ibook.reel_media WHERE id=$1", [id]);
     if (!m) fail(404, "Video unavailable.");
-    res.set("Cross-Origin-Resource-Policy", "cross-origin");
-    res.type(m.mime);
-    if (m.filename.startsWith('https://')) return res.redirect(307, m.filename);
-    res.sendFile(m.filename, { root: mediaRoot, dotfiles: "deny" }, (error) => {
-      if (error && !res.headersSent)
-        res.status(404).json({ error: "Video file unavailable." });
-    });
+    sendStoredMedia(req, res, m);
   });
   app.get("/api/reel-public/:id", async (req, res) =>
     res.json(await visibleReel(req.params.id)),
@@ -119,20 +142,17 @@ export function registerPublicReels(app) {
       [uuid.parse(req.params.id)],
     );
     if (!m) fail(404, "Video unavailable.");
-    res.set("Cross-Origin-Resource-Policy", "cross-origin");
-    res.type(m.mime);
-    if (m.filename.startsWith('https://')) return res.redirect(307, m.filename);
-    res.sendFile(m.filename, { root: mediaRoot, dotfiles: "deny" }, (error) => {
-      if (error && !res.headersSent)
-        res.status(404).json({ error: "Video file unavailable." });
-    });
+    sendStoredMedia(req, res, m);
   });
 }
 export const reelsRouter = express.Router();
 reelsRouter.get("/page-reels/:bookId/:page", async (req, res) => {
   const page = z.coerce.number().int().min(0).parse(req.params.page),
     bookId = req.params.bookId;
-  const { chapter } = await pageContext(bookId, page);
+  const { book, chapter } = await pageContext(bookId, page);
+  const startOffset = z.coerce.number().int().min(0).parse(req.query.startOffset ?? 0);
+  const endOffset = z.coerce.number().int().min(startOffset).parse(req.query.endOffset ?? Math.max(startOffset, chapter.length ?? chapter.text.length));
+  if (!featureFlags.viewing && !isReelAdmin(req.user.id)) return res.json({ items: [], hasMore: false, pageTitle: chapter.title, available: false });
   const mode = z
     .enum(["for-you", "page", "saved"])
     .parse(req.query.mode || "for-you");
@@ -153,11 +173,13 @@ reelsRouter.get("/page-reels/:bookId/:page", async (req, res) => {
    (SELECT count(*)::int FROM ibook.reel_reactions s WHERE s.reel_id=r.id AND s.liked) likes,
    (SELECT count(*)::int FROM ibook.reel_comments c WHERE c.reel_id=r.id) comments
    ${joins} LEFT JOIN ibook.reel_reactions rr ON rr.reel_id=r.id AND rr.user_id=$3
-   WHERE r.status='published' AND NOT coalesce(rr.hidden,false) AND (r.book_id<>$1 OR r.page=$2)
+   WHERE r.status='published' AND r.visibility='public' AND NOT coalesce(rr.hidden,false)
+   AND r.book_id=$1 AND r.content_version=$6
+   AND (r.reel_scope='book' OR (r.chapter_id=$7 AND (r.reel_scope='chapter' OR (r.start_offset<$9 AND r.end_offset>$8))))
    AND NOT(r.id=ANY($4::uuid[])) AND ($5<>'saved' OR rr.saved)
    AND NOT EXISTS(SELECT 1 FROM ibook.blocks WHERE (user_id=$3 AND blocked_id=r.creator_id) OR (user_id=r.creator_id AND blocked_id=$3))
    ORDER BY (r.book_id=$1 AND r.page=$2) DESC,r.created_at DESC LIMIT 250`,
-      [bookId, page, req.user.id, excluded, mode],
+      [bookId, page, req.user.id, excluded, mode, book.content_version || 1, chapter.id || String(page), startOffset, endOffset],
     ),
     query(
       "SELECT r.tags,(s.liked::int*2+s.saved::int*3+s.shared::int*2+s.max_completion-s.hidden::int*4) AS weight FROM ibook.reel_reactions s JOIN ibook.reels r ON r.id=s.reel_id WHERE s.user_id=$1 ORDER BY s.updated_at DESC LIMIT 200",
@@ -177,7 +199,16 @@ reelsRouter.get("/page-reels/:bookId/:page", async (req, res) => {
     hasMore: ranked.length > 12,
     pageTitle: chapter.title,
     rankingVersion: "page-context-v1",
+    available: ranked.length > 0,
   });
+});
+reelsRouter.get('/reel-availability/:bookId/:page', async (req, res) => {
+  const page = z.coerce.number().int().min(0).parse(req.params.page);
+  const { book, chapter } = await pageContext(req.params.bookId, page);
+  const start = z.coerce.number().int().min(0).parse(req.query.startOffset ?? 0);
+  const end = z.coerce.number().int().min(start).parse(req.query.endOffset ?? Math.max(start, chapter.length ?? chapter.text.length));
+  const [{ count }] = await query(`SELECT count(*)::int count FROM ibook.reels WHERE book_id=$1 AND content_version=$2 AND status='published' AND visibility='public' AND (reel_scope='book' OR (chapter_id=$3 AND (reel_scope='chapter' OR (start_offset<$5 AND end_offset>$4))))`, [req.params.bookId, book.content_version || 1, chapter.id || String(page), start, end]);
+  res.json({ available: featureFlags.viewing && count > 0, count, admin: isReelAdmin(req.user.id), flags: isReelAdmin(req.user.id) ? featureFlags : undefined });
 });
 reelsRouter.get("/reels/:id", async (req, res) => {
   const r = await visibleReel(req.params.id, req.user.id);
@@ -213,6 +244,7 @@ const upload = multer({
 });
 reelsRouter.get('/reel-upload-config', (_req, res) => res.json({ direct: cloudStorage }));
 reelsRouter.post('/reel-upload-token', publishLimit, async (req, res) => {
+  if (!isReelAdmin(req.user.id) || !featureFlags.editorialUploads) fail(403, 'Reel administrator access required.');
   if (!cloudStorage) fail(503, 'Cloud uploads are not configured.');
   const expired = await query('DELETE FROM ibook.reel_upload_intents WHERE owner_id=$1 AND expires_at<now() RETURNING pathname', [req.user.id]);
   await Promise.all(expired.map(intent => del(intent.pathname).catch(() => {})));
@@ -240,6 +272,7 @@ reelsRouter.post('/reel-upload-complete', publishLimit, async (req, res, next) =
   await query('DELETE FROM ibook.reel_upload_intents WHERE id=$1', [id]);
 });
 reelsRouter.post("/reel-upload", publishLimit, async (req, res, next) => {
+  if (!isReelAdmin(req.user.id) || !featureFlags.editorialUploads) fail(403, 'Reel administrator access required.');
   const [{ count }] = await query(
     "SELECT count(*)::int count FROM ibook.reel_media WHERE owner_id=$1",
     [req.user.id],
@@ -325,11 +358,12 @@ async function completeUpload(req, res, next, error) {
         filename = blob.url;
         req.file.cloudUrl = blob.url;
       }
+      const storedBytes = cloudStorage ? null : await readFile(req.file.path);
       await query(
-        "INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds) VALUES($1,$2,$3,$4,$5,$6)",
-        [id, req.user.id, filename, mime, req.file.size, duration],
+        "INSERT INTO ibook.reel_media(id,owner_id,filename,mime,bytes,duration_seconds,data) VALUES($1,$2,$3,$4,$5,$6,$7)",
+        [id, req.user.id, filename, mime, req.file.size, duration, storedBytes],
       );
-      if (cloudStorage) await unlink(req.file.path).catch(() => {});
+      await unlink(req.file.path).catch(() => {});
       res.status(201).json({ id, durationSeconds: duration });
     } catch (error) {
       await unlink(req.file.path).catch(() => {});
@@ -357,10 +391,16 @@ reelsRouter.delete("/reel-upload/:id", async (req, res) => {
   res.json({ ok: true });
 });
 reelsRouter.post("/reels", publishLimit, async (req, res) => {
+  if (!isReelAdmin(req.user.id) && !featureFlags.communityUploads) fail(403, "Community reel publishing is not open yet.");
   const input = z
     .object({
       bookId: z.string().min(1).max(80),
       page: z.number().int().min(0),
+      chapterId: z.string().min(1).max(200).optional(),
+      startOffset: z.number().int().min(0).optional(),
+      endOffset: z.number().int().min(0).optional(),
+      scope: z.enum(['passage','chapter','book']).optional(),
+      spoilerLevel: z.enum(['none','through_current_passage','chapter_spoiler','book_spoiler']).optional(),
       title: z.string().trim().min(3).max(100),
       caption: z.string().trim().min(10).max(1200),
       tags: z.array(z.string().trim().min(2).max(30)).max(8),
@@ -374,7 +414,11 @@ reelsRouter.post("/reels", publishLimit, async (req, res) => {
       "Choose one uploaded video or external link.",
     )
     .parse(req.body);
-  await pageContext(input.bookId, input.page);
+  const { book, chapter } = await pageContext(input.bookId, input.page);
+  const chapterId = input.chapterId || chapter.id || String(input.page);
+  const startOffset = input.startOffset ?? 0;
+  const endOffset = input.endOffset ?? Math.max(startOffset, chapter.length ?? chapter.text.length);
+  if (endOffset < startOffset || endOffset > (chapter.length ?? chapter.text.length)) fail(400, 'Selected passage is outside this chapter.');
   const id = await transaction(async (q) => {
     let duration = 30;
     if (input.mediaId) {
@@ -385,9 +429,16 @@ reelsRouter.post("/reels", publishLimit, async (req, res) => {
       if (!m) fail(403, "This upload does not belong to you.");
       duration = m.duration_seconds;
     }
+    const passageText = chapter.text.slice(startOffset, endOffset);
+    const passageHash = createHash('sha256').update(passageText.replace(/\s+/g, ' ').trim()).digest('hex');
+    const [passage] = await q(`INSERT INTO ibook.book_passages(id,book_id,content_version,chapter_id,start_offset,end_offset,passage_hash,preview_text)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+      ON CONFLICT(book_id,content_version,chapter_id,start_offset,end_offset)
+      DO UPDATE SET passage_hash=excluded.passage_hash,preview_text=excluded.preview_text
+      RETURNING id`, [randomUUID(), input.bookId, book.content_version || 1, chapterId, startOffset, endOffset, passageHash, passageText.slice(0, 240)]);
     const id = randomUUID();
     await q(
-      "INSERT INTO ibook.reels(id,creator_id,book_id,page,title,caption,tags,media_id,external_url,source_url,attribution,license,duration_seconds) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
+      "INSERT INTO ibook.reels(id,creator_id,book_id,page,title,caption,tags,media_id,external_url,source_url,attribution,license,duration_seconds,status,content_version,chapter_id,start_offset,end_offset,reel_scope,source_type,visibility,moderation_status,spoiler_level,preview_text,passage_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'ready',$14,$15,$16,$17,$18,$19,'private','approved',$20,$21,$22)",
       [
         id,
         req.user.id,
@@ -404,11 +455,43 @@ reelsRouter.post("/reels", publishLimit, async (req, res) => {
           ? "Creator confirms distribution rights"
           : "External post; rights remain with creator",
         duration,
+        book.content_version || 1,
+        chapterId,
+        startOffset,
+        endOffset,
+        input.scope || 'passage',
+        isReelAdmin(req.user.id) ? 'editorial' : 'community',
+        input.spoilerLevel || 'through_current_passage',
+        passageText.slice(0, 240),
+        passage.id,
       ],
     );
     return id;
   });
   res.status(201).json({ id });
+});
+reelsRouter.get('/admin/reels', async (req, res) => {
+  if (!isReelAdmin(req.user.id)) fail(403, 'Reel administrator access required.');
+  res.json(await query(`SELECT ${projection} ${joins} ORDER BY r.updated_at DESC LIMIT 250`));
+});
+reelsRouter.post('/admin/reels/:id/publish', async (req, res) => {
+  if (!isReelAdmin(req.user.id)) fail(403, 'Reel administrator access required.');
+  const id = uuid.parse(req.params.id);
+  await transaction(async q => {
+    const [reel] = await q("SELECT status FROM ibook.reels WHERE id=$1 FOR UPDATE", [id]);
+    if (!reel) fail(404, 'Reel unavailable.');
+    if (!['ready','hidden'].includes(reel.status)) fail(400, 'Only a ready reel can be published.');
+    await q("UPDATE ibook.reels SET status='published',visibility='public',published_at=coalesce(published_at,now()),updated_at=now() WHERE id=$1", [id]);
+    await q("INSERT INTO ibook.reel_moderation_events(id,reel_id,moderator_id,action,previous_status,new_status) VALUES($1,$2,$3,'publish',$4,'published')", [randomUUID(), id, req.user.id, reel.status]);
+  });
+  res.json({ ok: true });
+});
+reelsRouter.post('/admin/reels/:id/unpublish', async (req, res) => {
+  if (!isReelAdmin(req.user.id)) fail(403, 'Reel administrator access required.');
+  const id = uuid.parse(req.params.id);
+  const rows = await query("UPDATE ibook.reels SET status='ready',visibility='private',updated_at=now() WHERE id=$1 AND status IN ('published','hidden') RETURNING id", [id]);
+  if (!rows.length) fail(404, 'Published reel unavailable.');
+  res.json({ ok: true });
 });
 reelsRouter.delete("/reels/:id", async (req, res) => {
   const removed = await transaction(async (q) => {
@@ -510,6 +593,7 @@ reelsRouter.get("/reels/:id/comments", async (req, res) => {
   );
 });
 reelsRouter.post("/reels/:id/comments", async (req, res) => {
+  if (!featureFlags.comments) fail(403, 'Reel comments are not enabled yet.');
   await visibleReel(req.params.id, req.user.id);
   const body = z.string().trim().min(1).max(1000).parse(req.body.body);
   const [comment] = await query(

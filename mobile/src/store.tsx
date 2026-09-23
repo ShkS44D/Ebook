@@ -27,6 +27,7 @@ export type CatalogBook = {
 type User = {
   book_admin?: boolean;
   reel_moderator?: boolean;
+  reel_admin?: boolean;
   id: string;
   email: string;
   name: string;
