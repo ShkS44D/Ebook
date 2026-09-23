@@ -759,6 +759,7 @@ export function AddReel({ navigation, route }: any) {
     [spoilerLevel, setSpoilerLevel] = useState<'none'|'through_current_passage'|'chapter_spoiler'|'book_spoiler'>('through_current_passage'),
     [rights, setRights] = useState(false),
     [media, setMedia] = useState<{ id: string; name: string } | null>(null),
+    [uploadProgress, setUploadProgress] = useState<number | null>(null),
     [pageTitle, setPageTitle] = useState("");
   const uploadId = useRef<string | null>(null),
     mounted = useRef(true);
@@ -801,10 +802,35 @@ export function AddReel({ navigation, route }: any) {
       if (Platform.OS === 'web' && file.file) cloudForm.append('file', file.file);
       else cloudForm.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'video/mp4' } as any);
       Object.entries(signed.fields).forEach(([key, value]) => cloudForm.append(key, String(value)));
-      const response = await fetch(signed.uploadUrl, { method: 'POST', body: cloudForm });
-      if (!response.ok) {
-        const problem = await response.json().catch(() => ({}));
-        throw new Error(problem.error?.message || 'Cloudinary could not upload this video.');
+      setUploadProgress(0);
+      try {
+        if (Platform.OS === 'web') await new Promise<void>((resolve, reject) => {
+          const request = new XMLHttpRequest();
+          request.open('POST', signed.uploadUrl);
+          request.timeout = 120000;
+          request.upload.onprogress = event => {
+            if (event.lengthComputable && mounted.current) setUploadProgress(Math.min(99, Math.round(event.loaded / event.total * 100)));
+          };
+          request.onload = () => {
+            let result: any = {};
+            try { result = JSON.parse(request.responseText || '{}'); } catch {}
+            if (request.status >= 200 && request.status < 300) resolve();
+            else reject(new Error(result.error?.message || `Cloudinary upload failed (${request.status}).`));
+          };
+          request.onerror = () => reject(new Error('The video upload lost its connection. Please try again.'));
+          request.ontimeout = () => reject(new Error('The video upload timed out. Check your connection and try again.'));
+          request.send(cloudForm);
+        });
+        else {
+          const response = await fetch(signed.uploadUrl, { method: 'POST', body: cloudForm });
+          if (!response.ok) {
+            const problem = await response.json().catch(() => ({}));
+            throw new Error(problem.error?.message || 'Cloudinary could not upload this video.');
+          }
+        }
+        setUploadProgress(100);
+      } finally {
+        if (mounted.current) setUploadProgress(null);
       }
       data = await api('/reel-upload-complete', 'POST', { id: signed.id });
     } else data = await api("/reel-upload", "POST", form);
@@ -885,6 +911,7 @@ export function AddReel({ navigation, route }: any) {
               disabled={action.busy}
               onPress={() => action.run(pick)}
             />
+            {uploadProgress !== null && <Txt>Uploading video… {uploadProgress}%</Txt>}
             {media && <Txt>Uploaded: {media.name}</Txt>}
           </View>
         ) : (
